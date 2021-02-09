@@ -30,3 +30,10 @@
 *.exe
 *.out
 *.app
+
+# build folder
+build/*
+!build/.gitkeep
+
+# Visual Studio Code
+.vscode/

@@ -1,0 +1,7 @@
+* Changelog
+** [unreleased] - 2020-02-02
+*** Added
+- Create repository and send invitation to prof
+- Instantiate given template
+- Fill .gitignore
+- Create empty doc file
