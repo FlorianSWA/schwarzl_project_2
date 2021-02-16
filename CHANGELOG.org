@@ -1,5 +1,9 @@
 * Changelog
-** [unreleased] - 2020-02-02
+** [unreleased] - 2021-02-16
+*** Changed
+ - Tests moved into file main.cpp
+
+** [0.1.0] - 2021-02-02
 *** Added
 - Create repository and send invitation to prof
 - Instantiate given template
