@@ -6,7 +6,7 @@ Date: 2021-02-01
 #include <iostream>
 #include <thread>
 #include "spdlog/spdlog.h"
-#include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/sinks/rotating_file_sink.h"
 #include "dummy.pb.h"
 #include "CLI11.hpp"
 
@@ -23,8 +23,8 @@ int main(int argc, char* argv[]) {
     app.add_flag("-d, --debug", log_level_debug, "Set log level to debug.")->needs(log_flag);
 
     CLI11_PARSE(app, argc, argv);
-/*
-    shared_ptr<spdlog::logger> file_logger{spdlog::basic_logger_mt("basic_logger", "./dist_sync_log.log")};
+
+    shared_ptr<spdlog::logger> file_logger = spdlog::rotating_logger_mt("file_logger", "./distance_vector.log", 1048576 * 5, 3);
 
     if (use_logging) {
         if (log_level_debug) {
@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
         file_logger->set_level(spdlog::level::off);
         file_logger->flush_on(spdlog::level::off);
     }
-*/
+
     GOOGLE_PROTOBUF_VERIFY_VERSION;
     Dummy *d = new Dummy;
     d->set_text("Hello World");
