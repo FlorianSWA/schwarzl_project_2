@@ -45,5 +45,6 @@ int main(int argc, char* argv[]) {
     cout << d->text() << endl;
     delete d;
     google::protobuf::ShutdownProtobufLibrary();
+    
     return 0;
 }

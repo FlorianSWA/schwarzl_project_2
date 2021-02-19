@@ -3,6 +3,10 @@ Author: Florian Schwarzl
 Date: 2021-02-16
 */
 
+#pragma once
+
+#include "spdlog/spdlog.h"
+
 class Sender {
   private:
     std::shared_ptr<spdlog::logger> logger;
@@ -11,5 +15,5 @@ class Sender {
     Sender() {
         logger = spdlog::get("file_logger");
     }
-    void operator()();
+    bool send(std::string message, std::string port);
 };

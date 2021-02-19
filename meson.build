@@ -40,7 +40,7 @@ generated = gen.process('src/dummy.proto')
 
 inc_dir = include_directories('include')
 #src = ['src/main.cpp'] protobuf:
-src = ['src/main.cpp', generated]
+src = ['src/main.cpp', 'src/node.cpp', 'src/sender.cpp', generated]
 
 executable('distance_vector_sim',
            sources : src,
