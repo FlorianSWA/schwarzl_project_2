@@ -18,16 +18,19 @@ class Node {
   private:
     int id;
     int port{9999};
-    std::vector<std::string> neighbours;
+    std::vector<int> neighbours;
+    std::shared_ptr<spdlog::logger> logger;
+
+    void send_message(std::string message, int interval);
 
   public:
-    Node(int id_, int port_, std::vector<std::string> neighbours_) {
+    Node(int id_, int port_, std::vector<int> neighbours_) {
         id = id_;
         port = port_;
         neighbours = neighbours_;
+        logger = spdlog::get("file_logger");
     };
         
-    Sender message_sender();
     void serve_request(asio::ip::tcp::socket&& sock);
 
     void operator()();

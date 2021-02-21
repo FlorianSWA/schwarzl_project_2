@@ -7,8 +7,9 @@ Date: 2021-02-01
 #include <thread>
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/rotating_file_sink.h"
-#include "dummy.pb.h"
 #include "CLI11.hpp"
+#include "node.h"
+
 
 using namespace std;
 
@@ -39,12 +40,17 @@ int main(int argc, char* argv[]) {
         file_logger->flush_on(spdlog::level::off);
     }
 
-    GOOGLE_PROTOBUF_VERIFY_VERSION;
-    Dummy *d = new Dummy;
-    d->set_text("Hello World");
-    cout << d->text() << endl;
-    delete d;
-    google::protobuf::ShutdownProtobufLibrary();
+    size_t node_cnt{3};
+    vector<thread> node_thread_pool;
+    vector<int> neighbours{9991, 9992, 9993};
+
+    for (size_t i{0}; i < node_cnt; i++) {
+        node_thread_pool.push_back(thread(Node(i, neighbours[i], neighbours)));
+    }
+
+    for (size_t i{0}; i < node_cnt; i++) {
+        node_thread_pool[i].join();
+    }
     
     return 0;
 }

@@ -8,6 +8,7 @@ Date: 2021-02-16
 #include "spdlog/spdlog.h"
 #include "spdlog/fmt/fmt.h"
 #include "sender.h"
+#include "spdlog/spdlog.h"
 
 
 using namespace std;
@@ -17,8 +18,7 @@ bool Sender::send(string message, string port) {
     if (strm) {
         spdlog::info("Connected successfully.");
         strm << message << "\n";
-        fmt::print("Recieved time: ");
-        fmt::print(message + "\n");
+        fmt::print("Node {} recieved message: {}\n", 1, message);
         strm.close();
     } else {
         logger->error("Error occured while connecting: {}", strm.error().message());
