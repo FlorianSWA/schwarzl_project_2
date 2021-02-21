@@ -23,12 +23,12 @@ void Node::operator()() {
     while (true) {
         tcp::socket sock{ctxt};
         acceptor.accept(sock);
-        thread thd{&Node::serve_request, move(sock), this}; // this is not working
+        thread thd(&Node::serve_request, this, move(sock));
         thd.detach();
     }
 }
 
-void serve_request(tcp::socket& sock) {
+void Node::serve_request(tcp::socket&& sock) {
     asio::streambuf buf;
     asio::read_until(sock, buf, '\n');
     string reply;

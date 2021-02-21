@@ -10,6 +10,7 @@ Desc: Class representing a node in the simulated network
 #include <string>
 #include <vector>
 #include "sender.h"
+#include "asio.hpp"
 
 
 class Node {
@@ -18,8 +19,6 @@ class Node {
     int id;
     int port{9999};
     std::vector<std::string> neighbours;
-    Sender message_sender();
-    void serve_request();
 
   public:
     Node(int id_, int port_, std::vector<std::string> neighbours_) {
@@ -27,6 +26,9 @@ class Node {
         port = port_;
         neighbours = neighbours_;
     };
+        
+    Sender message_sender();
+    void serve_request(asio::ip::tcp::socket&& sock);
 
     void operator()();
 };
