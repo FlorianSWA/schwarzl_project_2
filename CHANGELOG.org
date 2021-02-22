@@ -8,7 +8,7 @@
  - Sender class controlling message sending
  - Communication between Nodes over TCP socket
  - Command line output
- *** Removed
+*** Removed
  - Tests for libraries
 
 ** [0.0.1] - 2021-02-02
