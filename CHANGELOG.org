@@ -1,9 +1,17 @@
 * Changelog
-** [unreleased] - 2021-02-16
-*** Changed
- - Tests moved into file main.cpp
+** [unreleased] - 2021-02-22
 
-** [0.1.0] - 2021-02-02
+** [0.0.2] - 2021-02-16
+*** Added
+ - CLI with logging options
+ - callable Node class
+ - Sender class controlling message sending
+ - Communication between Nodes over TCP socket
+ - Command line output
+ *** Removed
+ - Tests for libraries
+
+** [0.0.1] - 2021-02-02
 *** Added
 - Create repository and send invitation to prof
 - Instantiate given template
