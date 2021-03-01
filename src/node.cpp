@@ -22,8 +22,9 @@ void Node::operator()() {
     mt19937 gen{rd()};
     uniform_int_distribution<int> dis{3, 5};
 
-    string msg{"Hello from Node " + to_string(id)};
-    thread sender_thd{&Node::send_message, this, msg, dis(gen)};
+    string msg{"Hello from Node " + to_string(port)};
+    thread sender_thd{ref(message_sender), msg};
+    //thread sender_thd{&Node::broadcast_message, this, msg, dis(gen)};
     sender_thd.detach();
 
     asio::io_context ctxt;
@@ -42,25 +43,25 @@ void Node::operator()() {
 void Node::serve_request(tcp::socket&& sock) {
     asio::streambuf buf;
     asio::read_until(sock, buf, '\n');
-    string reply;
+    string message;
     istream is{&buf};
-    getline(is, reply);
-    fmt::print("[{}] Recieved: " + reply + "\n", format(fg(fmt::color::royal_blue), "Node " + to_string(id)));
+    getline(is, message);
+    fmt::print("[{}] Recieved: " + message + "\n", format(fg(fmt::color::royal_blue), "Node " + to_string(port)));
     sock.close();
 }
 
-void Node::send_message(string message, int interval) {
+void Node::broadcast_message(string message, int interval) {
     while (true) {
         for (size_t i{0}; i < neighbours.size(); i++) {
             asio::ip::tcp::iostream strm{"localhost", to_string(neighbours[i])};
             if (strm) {
-                logger->info("Opened connection between Node {} (sender) and Node {} (reciever).", id, i);
+                logger->info("Opened connection between Node {} (sender) and Node {} (reciever).", port, neighbours[i]);
 
                 strm << message << "\n";
-                fmt::print("[{}] Node {} recieved message: {}\n", format(fg(fmt::color::royal_blue), "Node " + to_string(id)), id, message);
+                fmt::print("[{}] sent message: {}\n to ", format(fg(fmt::color::royal_blue), "Node " + to_string(port)), message, neighbours[i]);
 
                 strm.close();
-                logger->info("Closed connection between Node {} (sender) and Node {} (reciever).", id, i);
+                logger->info("Closed connection between Node {} (sender) and Node {} (reciever).", port, neighbours[i]);
             } else {
                 logger->error("Error occured while connecting: {}", strm.error().message());
             }

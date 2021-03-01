@@ -19,9 +19,13 @@ int main(int argc, char* argv[]) {
 
     bool use_logging{false};
     bool log_level_debug{false};
+    size_t node_cnt{4};
+    string config_file;
 
-    auto log_flag{app.add_flag("-l, --log", use_logging, "Write log file dist_sync_log.log")};
+    app.add_option("node count", node_cnt, "Total number of nodes.");
+    auto log_flag{app.add_flag("-l, --log", use_logging, "Write log file dist_sync_log.log.")};
     app.add_flag("-d, --debug", log_level_debug, "Set log level to debug.")->needs(log_flag);
+    app.add_flag("-f, --file", config_file, "Path to json config file.");
 
     CLI11_PARSE(app, argc, argv);
 
@@ -40,12 +44,16 @@ int main(int argc, char* argv[]) {
         file_logger->flush_on(spdlog::level::off);
     }
 
-    size_t node_cnt{3};
     vector<thread> node_thread_pool;
-    vector<int> neighbours{9991, 9992, 9993};
+    vector<int> nodes;
+    
+    for (size_t i{0}; i < node_cnt; i++) {
+        nodes.push_back(9900 + i);
+    }
+
 
     for (size_t i{0}; i < node_cnt; i++) {
-        node_thread_pool.push_back(thread(Node(i, neighbours[i], neighbours)));
+        node_thread_pool.push_back(thread(Node(nodes[i], nodes)));
     }
 
     for (size_t i{0}; i < node_cnt; i++) {

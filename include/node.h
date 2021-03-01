@@ -16,9 +16,6 @@ Desc: Class representing a node in the simulated network
 class Node {
 
   private:
-    // Unique Id of this node
-    int id;
-
     // Port number of this node
     int port{9999};
 
@@ -28,12 +25,17 @@ class Node {
     // spdlog file logger
     std::shared_ptr<spdlog::logger> logger;
 
+    // Handler for message sending
+    Sender message_sender;
+
     // send message to all nodes (including self)
-    void send_message(std::string message, int interval);
+    void broadcast_message(std::string message, int interval);
+
+    // send message to specified port
+    void send_to(int port, std::string message);
 
   public:
-    Node(int id_, int port_, std::vector<int> neighbours_) {
-        id = id_;
+    Node(int port_, std::vector<int> neighbours_): message_sender(port_, neighbours_) {
         port = port_;
         neighbours = neighbours_;
         logger = spdlog::get("file_logger");
