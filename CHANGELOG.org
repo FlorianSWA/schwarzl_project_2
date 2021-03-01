@@ -1,5 +1,9 @@
 * Changelog
-** [unreleased] - 2021-02-22
+** [unreleased] - 2021-03-01
+
+** [0.0.3] - 2021-02-22
+*** Changed
+ - Moved message sending to sender class
 
 ** [0.0.2] - 2021-02-16
 *** Added
