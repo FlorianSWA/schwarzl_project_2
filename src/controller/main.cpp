@@ -4,14 +4,25 @@ Date: 2021-02-01
 */
 
 #include <iostream>
-#include <thread>
+#include <unistd.h>
+#include <sys/wait.h>
+#include "spdlog/fmt/fmt.h"
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/rotating_file_sink.h"
 #include "CLI11.hpp"
-#include "node.h"
 
 
 using namespace std;
+
+void sigint_handler(int signal_number) {
+    for (size_t i{0}; i < node_processes.size(); i++) {
+        kill(node_processes[i], SIGTERM);
+    }
+    while ((wait(nullptr)) > 0);
+    _exit(handler_exit_code);
+}
+
+vector<pid_t> node_processes;
 
 int main(int argc, char* argv[]) {
 
@@ -44,21 +55,41 @@ int main(int argc, char* argv[]) {
         file_logger->flush_on(spdlog::level::off);
     }
 
-    vector<thread> node_thread_pool;
     vector<int> nodes;
+    int port_list[node_cnt];
+
+    for(int i{0}; i < node_cnt; i++) {
+        port_list[i] = 9900 + i;
+    }
+
+    const char node_program[7]{"./node"};
     
     for (size_t i{0}; i < node_cnt; i++) {
-        nodes.push_back(9900 + i);
+        string port_arg;
+
+        for (int i{0}; i < node_cnt; i++) {
+            port_arg += to_string(port_list[i]);
+        }
+
+        pid_t node_pid{fork()};
+        if (node_pid == -1) {
+            file_logger->error("Creating child process {} failed.", i);
+        } else if (node_pid > 0) {
+            fmt::print("Create node process with pid {}.\n", node_pid);
+        } else {
+            execl(node_program, args, nullptr);
+            perror("execl");
+            exit(EXIT_FAILURE);
+        }
+    }    
+    fmt::print("This is the controller\n");
+
+    pid_t node_pid;
+    while ((node_pid = wait(nullptr)) > 0) {
+        fmt::print("child {} terminated.\n", node_pid);
     }
 
+    signal(SIGINT, sigint_handler);
 
-    for (size_t i{0}; i < node_cnt; i++) {
-        node_thread_pool.push_back(thread(Node(nodes[i], nodes)));
-    }
-
-    for (size_t i{0}; i < node_cnt; i++) {
-        node_thread_pool[i].join();
-    }
-    
     return 0;
 }

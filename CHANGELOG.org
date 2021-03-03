@@ -1,5 +1,7 @@
 * Changelog
 ** [unreleased] - 2021-03-01
+*** Changed
+ - Switched from thread-based concept to process-based concept
 
 ** [0.0.3] - 2021-02-22
 *** Changed
