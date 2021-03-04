@@ -34,15 +34,15 @@ class Node {
     // send message to specified port
     void send_to(int port, std::string message);
 
+    // handle connection request on port
+    void serve_request(asio::ip::tcp::socket&& sock);
+
   public:
     Node(int port_, std::vector<int> neighbours_): message_sender(port_, neighbours_) {
         port = port_;
         neighbours = neighbours_;
         logger = spdlog::get("file_logger");
     };
-    
-    // handle connection request on port
-    void serve_request(asio::ip::tcp::socket&& sock);
 
-    void operator()();
+    void run();
 };
