@@ -22,7 +22,7 @@ void Node::run() {
 
     random_device rd{};
     mt19937 gen{rd()};
-    uniform_int_distribution<int> dis{3, 5};
+    uniform_int_distribution<int> dis{6, 9};
 
     string msg{"Hello from Node " + to_string(port)};
     thread sender_thd{ref(message_sender), msg};

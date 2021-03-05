@@ -16,11 +16,13 @@ int main(int argc, char* argv[]) {
 
     int port{9900};
     vector<int> neighbours;
+    vector<int> nodes;
     bool use_logging{false};
     bool log_level_debug{false};
 
-    app.add_option("port", port, "The port of this node.");
-    app.add_option("neighbours", neighbours, "Vector of all nodes.");
+    app.add_option("-p, --port", port, "The port of this node.")->required();
+    app.add_option("-n, --neighbours", neighbours, "Vector of neighbouring node ports.");
+    app.add_option("nodes", nodes, "Vector of all node ports.");
     auto log_flag{app.add_flag("-l, --log", use_logging, "Write log file node_<port>.log.")};
     app.add_flag("-d, --debug", log_level_debug, "Set log level to debug.")->needs(log_flag);
 
@@ -43,7 +45,7 @@ int main(int argc, char* argv[]) {
         file_logger->flush_on(spdlog::level::off);
     }
 
-    Node n1(port, neighbours);
+    Node n1(port, nodes);
     n1.run();
 
     return 0;

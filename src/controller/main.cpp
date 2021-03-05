@@ -11,17 +11,18 @@ Date: 2021-02-01
 #include "spdlog/sinks/rotating_file_sink.h"
 #include "spdlog/fmt/bundled/color.h"
 #include "CLI11.hpp"
+#include "utils.h"
 
 
 using namespace std;
 
 
-vector<pid_t> node_processes;
+vector<pid_t> node_process_pids;
 
 void sigint_handler(int signal_number) {
-    for (size_t i{0}; i < node_processes.size(); i++) {
-        spdlog::get("file_logger")->debug("Kill process {} with signal {}.", node_processes[i], signal_number);
-        kill(node_processes[i], SIGTERM);
+    for (size_t i{0}; i < node_process_pids.size(); i++) {
+        spdlog::get("file_logger")->debug("Kill process {} with signal {}.", node_process_pids[i], signal_number);
+        kill(node_process_pids[i], SIGTERM);
     }
     while ((wait(nullptr)) > 0);
     _exit(103);
@@ -58,6 +59,8 @@ int main(int argc, char* argv[]) {
         file_logger->flush_on(spdlog::level::off);
     }
 
+    //GenerateNetworkGraph(node_cnt * 2 + 1, node_cnt);
+
     vector<string> port_list;
 
     for(size_t i{0}; i < node_cnt; i++) {
@@ -68,20 +71,22 @@ int main(int argc, char* argv[]) {
     
     for (size_t i{0}; i < node_cnt; i++) {
         vector<char*> node_args;
+        node_args.push_back(const_cast<char*>("./node"));
+
+        if (use_logging) {
+            node_args.push_back(const_cast<char*>("--log"));
+            if (log_level_debug) {
+                node_args.push_back(const_cast<char*>("--debug"));
+            }
+        }
+        node_args.push_back(const_cast<char*>("-p"));
         node_args.push_back(const_cast<char*>(port_list[i].c_str()));
 
         for (size_t j{0}; j < node_cnt; j++) {
             if (port_list[j] != port_list[i]) {
-                node_args.push_back(const_cast<char*>(port_list[i].c_str()));
+                node_args.push_back(const_cast<char*>(port_list[j].c_str()));
             }
         }
-        if (use_logging) {
-            node_args.push_back(const_cast<char*>("-l"));
-            if (log_level_debug) {
-                node_args.push_back(const_cast<char*>("-d"));
-            }
-        }
-
         node_args.push_back(NULL);
 
         pid_t node_pid{fork()};
@@ -91,7 +96,8 @@ int main(int argc, char* argv[]) {
             fmt::print("[{}] Create node process with pid {}.\n", format(fg(fmt::color::magenta), "Controller"), node_pid);
             file_logger->info("Create node process with pid {}.", node_pid);
         } else {
-            execv(node_program, &node_args.data()[0]);
+            char** node_argv{node_args.data()};
+            execv(node_program, &node_argv[0]);
             perror("execl");
             exit(EXIT_FAILURE);
         }
@@ -99,7 +105,7 @@ int main(int argc, char* argv[]) {
 
     pid_t node_pid;
     while ((node_pid = wait(nullptr)) > 0) {
-        fmt::print("Node process {} terminated.\n", node_pid);
+        fmt::print("[{}] Node process {} terminated.\n", format(fg(fmt::color::magenta), "Controller"), node_pid);
     }
 
     signal(SIGINT, sigint_handler);
