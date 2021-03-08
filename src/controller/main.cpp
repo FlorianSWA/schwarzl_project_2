@@ -21,7 +21,7 @@ vector<pid_t> node_process_pids;
 
 void sigint_handler(int signal_number) {
     for (size_t i{0}; i < node_process_pids.size(); i++) {
-        spdlog::get("file_logger")->debug("Kill process {} with signal {}.", node_process_pids[i], signal_number);
+        spdlog::debug("Kill process {} with signal {}.", node_process_pids[i], signal_number);
         kill(node_process_pids[i], SIGTERM);
     }
     while ((wait(nullptr)) > 0);
@@ -58,8 +58,17 @@ int main(int argc, char* argv[]) {
         file_logger->set_level(spdlog::level::off);
         file_logger->flush_on(spdlog::level::off);
     }
+    spdlog::set_default_logger(file_logger);
 
-    //GenerateNetworkGraph(node_cnt * 2 + 1, node_cnt);
+    vector<vector<int>> network{generate_network_graph(node_cnt * 2 - 1, node_cnt)};
+
+    for (size_t i{0}; i < network.size(); i++) {
+        fmt::print("Vector[{}] = [", i);
+        for (size_t j{0}; j < network[i].size(); j++) {
+           fmt::print("{} ", network[i][j]);
+        }
+        fmt::print("]\n");
+    }
 
     vector<string> port_list;
 
@@ -91,10 +100,10 @@ int main(int argc, char* argv[]) {
 
         pid_t node_pid{fork()};
         if (node_pid == -1) {
-            file_logger->error("Creating node process {} failed.", i);
+            spdlog::error("Creating node process {} failed.", i);
         } else if (node_pid > 0) {
             fmt::print("[{}] Create node process with pid {}.\n", format(fg(fmt::color::magenta), "Controller"), node_pid);
-            file_logger->info("Create node process with pid {}.", node_pid);
+            spdlog::info("Create node process with pid {}.", node_pid);
         } else {
             char** node_argv{node_args.data()};
             execv(node_program, &node_argv[0]);

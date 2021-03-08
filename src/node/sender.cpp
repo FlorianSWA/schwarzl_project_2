@@ -19,13 +19,13 @@ using namespace std;
 void Sender::send(string message, string port, int sender_port) {
     asio::ip::tcp::iostream strm{"localhost", port};
     if (strm) {
-        logger->debug("Opened connection between Node {} (sender) and Node {} (reciever).", sender_port, port);
+        spdlog::debug("Opened connection between Node {} (sender) and Node {} (reciever).", sender_port, port);
         strm << message << "\n";
         fmt::print("[{}] sent message: {}\n", format(fg(fmt::color::royal_blue), "Node " + to_string(sender_port)), message);
         strm.close();
-        logger->debug("Closed connection between Node {} (sender) and Node {} (reciever).", sender_port, port);
+        spdlog::debug("Closed connection between Node {} (sender) and Node {} (reciever).", sender_port, port);
     } else {
-        logger->error("Error occured while connecting: {}", strm.error().message());
+        spdlog::error("Error occured while connecting: {}", strm.error().message());
     }
 }
 

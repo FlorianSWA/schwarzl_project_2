@@ -3,6 +3,7 @@ Author: Florian Schwarzl
 Date: 2021-03-03
 */
 
+#include "spdlog/spdlog.h"
 #include "spdlog/fmt/fmt.h"
 #include "spdlog/sinks/rotating_file_sink.h"
 #include "CLI11.hpp"
@@ -30,8 +31,6 @@ int main(int argc, char* argv[]) {
 
     shared_ptr<spdlog::logger> file_logger = spdlog::rotating_logger_mt("file_logger", "./node_" + to_string(port) + ".log", 1048576 * 5, 1);
 
-    file_logger->debug("Started node process {}.", port);
-
     if (use_logging) {
         if (log_level_debug) {
             file_logger->set_level(spdlog::level::debug);
@@ -44,6 +43,8 @@ int main(int argc, char* argv[]) {
         file_logger->set_level(spdlog::level::off);
         file_logger->flush_on(spdlog::level::off);
     }
+    spdlog::set_default_logger(file_logger);
+    spdlog::debug("Started node process {}.", port);
 
     Node n1(port, nodes);
     n1.run();

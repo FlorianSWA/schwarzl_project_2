@@ -5,4 +5,4 @@ Date: 2021-03-05
 
 #pragma once
 
-void GenerateNetworkGraph(int edge_cnt, int node_cnt);
+std::vector<std::vector<int>> generate_network_graph(int edge_cnt, int node_cnt);

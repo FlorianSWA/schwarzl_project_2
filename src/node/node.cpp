@@ -9,6 +9,7 @@ Desc: Class representing a node in the simulated network
 #include <random>
 #include "node.h"
 #include "asio.hpp"
+#include "spdlog/spdlog.h"
 #include "spdlog/fmt/fmt.h"
 #include "spdlog/fmt/bundled/color.h"
 
@@ -18,7 +19,7 @@ using namespace std;
 
 void Node::run() {
     fmt::print("[{}] started.\n", format(fg(fmt::color::royal_blue), "Node " + to_string(port)));
-    logger->info("Node {} started.", port);
+    spdlog::info("Node {} started.", port);
 
     random_device rd{};
     mt19937 gen{rd()};
@@ -49,7 +50,7 @@ void Node::serve_request(tcp::socket&& sock) {
     istream is{&buf};
     getline(is, message);
     fmt::print("[{}] Received: " + message + "\n", format(fg(fmt::color::royal_blue), "Node " + to_string(port)));
-    logger->info("Node {} received message: {}", this->port, message);
+    spdlog::info("Node {} received message: {}", this->port, message);
     sock.close();
 }
 
@@ -58,15 +59,15 @@ void Node::broadcast_message(string message, int interval) {
         for (size_t i{0}; i < neighbours.size(); i++) {
             asio::ip::tcp::iostream strm{"localhost", to_string(neighbours[i])};
             if (strm) {
-                logger->debug("Opened connection between Node {} (sender) and Node {} (reciever).", port, neighbours[i]);
+                spdlog::debug("Opened connection between Node {} (sender) and Node {} (reciever).", port, neighbours[i]);
 
                 strm << message << "\n";
                 fmt::print("[{}] sent message: {} to {}\n", format(fg(fmt::color::royal_blue), "Node " + to_string(port)), message, neighbours[i]);
-                logger->info("Node {} sent message: {} to {}", port, message, neighbours[i]);
+                spdlog::info("Node {} sent message: {} to {}", port, message, neighbours[i]);
                 strm.close();
-                logger->debug("Closed connection between Node {} (sender) and Node {} (reciever).", port, neighbours[i]);
+                spdlog::debug("Closed connection between Node {} (sender) and Node {} (reciever).", port, neighbours[i]);
             } else {
-                logger->error("Error occured while connecting: {}", strm.error().message());
+                spdlog::error("Error occured while connecting: {}", strm.error().message());
             }
         }
         this_thread::sleep_for(chrono::seconds(interval));

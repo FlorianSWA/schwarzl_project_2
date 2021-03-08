@@ -22,9 +22,6 @@ class Node {
     // vector with the port numbers of all nodes
     std::vector<int> neighbours;
 
-    // spdlog file logger
-    std::shared_ptr<spdlog::logger> logger;
-
     // Handler for message sending
     Sender message_sender;
 
@@ -41,7 +38,6 @@ class Node {
     Node(int port_, std::vector<int> neighbours_): message_sender(port_, neighbours_) {
         port = port_;
         neighbours = neighbours_;
-        logger = spdlog::get("file_logger");
     };
 
     void run();
