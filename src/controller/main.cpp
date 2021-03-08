@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
     }
     spdlog::set_default_logger(file_logger);
 
-    vector<vector<int>> network{generate_network_graph(node_cnt * 2 - 1, node_cnt)};
+    vector<vector<string>> network{generate_network_graph(node_cnt * 2 - 1, node_cnt)};
 
     for (size_t i{0}; i < network.size(); i++) {
         fmt::print("Vector[{}] = [", i);
@@ -91,11 +91,17 @@ int main(int argc, char* argv[]) {
         node_args.push_back(const_cast<char*>("-p"));
         node_args.push_back(const_cast<char*>(port_list[i].c_str()));
 
+        node_args.push_back(const_cast<char*>("-a"));
         for (size_t j{0}; j < node_cnt; j++) {
             if (port_list[j] != port_list[i]) {
                 node_args.push_back(const_cast<char*>(port_list[j].c_str()));
             }
         }
+        node_args.push_back(const_cast<char*>("-n"));
+        for (size_t j{0}; j < network[i].size(); j++) {
+            node_args.push_back(const_cast<char*>(network[i][j].c_str()));
+        }
+
         node_args.push_back(NULL);
 
         pid_t node_pid{fork()};

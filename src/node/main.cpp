@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
 
     app.add_option("-p, --port", port, "The port of this node.")->required();
     app.add_option("-n, --neighbours", neighbours, "Vector of neighbouring node ports.");
-    app.add_option("nodes", nodes, "Vector of all node ports.");
+    app.add_option("-a, --all_nodes", nodes, "Vector of all node ports.");
     auto log_flag{app.add_flag("-l, --log", use_logging, "Write log file node_<port>.log.")};
     app.add_flag("-d, --debug", log_level_debug, "Set log level to debug.")->needs(log_flag);
 

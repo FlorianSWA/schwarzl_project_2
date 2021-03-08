@@ -18,7 +18,7 @@ using namespace asio::ip;
 using namespace std;
 
 void Node::run() {
-    fmt::print("[{}] started.\n", format(fg(fmt::color::royal_blue), "Node " + to_string(port)));
+    fmt::print("[{}] started.\n", format(fg(fmt::color::cyan), "Node " + to_string(port)));
     spdlog::info("Node {} started.", port);
 
     random_device rd{};
@@ -49,7 +49,7 @@ void Node::serve_request(tcp::socket&& sock) {
     string message;
     istream is{&buf};
     getline(is, message);
-    fmt::print("[{}] Received: " + message + "\n", format(fg(fmt::color::royal_blue), "Node " + to_string(port)));
+    fmt::print("[{}] Received: " + message + "\n", format(fg(fmt::color::cyan), "Node " + to_string(port)));
     spdlog::info("Node {} received message: {}", this->port, message);
     sock.close();
 }
@@ -62,7 +62,7 @@ void Node::broadcast_message(string message, int interval) {
                 spdlog::debug("Opened connection between Node {} (sender) and Node {} (reciever).", port, neighbours[i]);
 
                 strm << message << "\n";
-                fmt::print("[{}] sent message: {} to {}\n", format(fg(fmt::color::royal_blue), "Node " + to_string(port)), message, neighbours[i]);
+                fmt::print("[{}] sent message: {} to {}\n", format(fg(fmt::color::cyan), "Node " + to_string(port)), message, neighbours[i]);
                 spdlog::info("Node {} sent message: {} to {}", port, message, neighbours[i]);
                 strm.close();
                 spdlog::debug("Closed connection between Node {} (sender) and Node {} (reciever).", port, neighbours[i]);

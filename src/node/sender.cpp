@@ -21,7 +21,7 @@ void Sender::send(string message, string port, int sender_port) {
     if (strm) {
         spdlog::debug("Opened connection between Node {} (sender) and Node {} (reciever).", sender_port, port);
         strm << message << "\n";
-        fmt::print("[{}] sent message: {}\n", format(fg(fmt::color::royal_blue), "Node " + to_string(sender_port)), message);
+        fmt::print("[{}] sent message: {}\n", format(fg(fmt::color::cyan), "Node " + to_string(sender_port)), message);
         strm.close();
         spdlog::debug("Closed connection between Node {} (sender) and Node {} (reciever).", sender_port, port);
     } else {
