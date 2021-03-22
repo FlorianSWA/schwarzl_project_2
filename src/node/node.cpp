@@ -12,6 +12,7 @@ Desc: Class representing a node in the simulated network
 #include "spdlog/spdlog.h"
 #include "spdlog/fmt/fmt.h"
 #include "spdlog/fmt/bundled/color.h"
+#include "distance_vector.pb.h"
 
 
 using namespace asio::ip;
@@ -45,12 +46,12 @@ void Node::run() {
 
 void Node::serve_request(tcp::socket&& sock) {
     asio::streambuf buf;
-    asio::read_until(sock, buf, '\n');
-    string message;
+    asio::read(sock, buf);
+    distance_vector::SimpleMessage message;
     istream is{&buf};
-    getline(is, message);
-    fmt::print("[{}] Received: " + message + "\n", format(fg(fmt::color::cyan), "Node " + to_string(port)));
-    spdlog::info("Node {} received message: {}", this->port, message);
+    message.ParseFromIstream(&is);
+    fmt::print("[{}] Received: " + message.text() + "\n", format(fg(fmt::color::cyan), "Node " + to_string(port)));
+    spdlog::info("Node {} received message: {}", this->port, message.text());
     sock.close();
 }
 
@@ -60,8 +61,11 @@ void Node::broadcast_message(string message, int interval) {
             asio::ip::tcp::iostream strm{"localhost", to_string(neighbours[i])};
             if (strm) {
                 spdlog::debug("Opened connection between Node {} (sender) and Node {} (reciever).", port, neighbours[i]);
-
-                strm << message << "\n";
+                distance_vector::SimpleMessage testMessage;
+                testMessage.set_text(message);
+                testMessage.set_source(this->port);
+                testMessage.set_target(neighbours[i]);
+                testMessage.SerializeToOstream(&strm);
                 fmt::print("[{}] sent message: {} to {}\n", format(fg(fmt::color::cyan), "Node " + to_string(port)), message, neighbours[i]);
                 spdlog::info("Node {} sent message: {} to {}", port, message, neighbours[i]);
                 strm.close();

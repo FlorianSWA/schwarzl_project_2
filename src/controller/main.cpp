@@ -12,6 +12,7 @@ Date: 2021-02-01
 #include "spdlog/fmt/bundled/color.h"
 #include "CLI11.hpp"
 #include "utils.h"
+#include "distance_vector.pb.h"
 
 
 using namespace std;
@@ -29,6 +30,7 @@ void sigint_handler(int signal_number) {
 }
 
 int main(int argc, char* argv[]) {
+    GOOGLE_PROTOBUF_VERIFY_VERSION;
 
     CLI::App app("Simulate the distributed algorithm for synchronization");
 
@@ -37,8 +39,10 @@ int main(int argc, char* argv[]) {
     size_t node_cnt{4};
     string config_file;
 
+    const char node_program[7]{"./node"};
+
     app.add_option("node count", node_cnt, "Total number of nodes.");
-    auto log_flag{app.add_flag("-l, --log", use_logging, "Write log file dist_sync_log.log.")};
+    CLI::Option* log_flag{app.add_flag("-l, --log", use_logging, "Write log file dist_sync_log.log.")};
     app.add_flag("-d, --debug", log_level_debug, "Set log level to debug.")->needs(log_flag);
     app.add_flag("-f, --file", config_file, "Path to json config file.");
 
@@ -62,47 +66,47 @@ int main(int argc, char* argv[]) {
 
     vector<vector<string>> network{generate_network_graph(node_cnt * 2 - 1, node_cnt)};
 
+    ostringstream debug_msg;
     for (size_t i{0}; i < network.size(); i++) {
-        fmt::print("Vector[{}] = [", i);
+        debug_msg << "Vector[" << i << "] = [";
         for (size_t j{0}; j < network[i].size(); j++) {
-           fmt::print("{} ", network[i][j]);
+           debug_msg << network[i][j];
         }
-        fmt::print("]\n");
+        debug_msg  << "]\n";
     }
+    spdlog::debug(debug_msg.str());
 
     vector<string> port_list;
 
     for(size_t i{0}; i < node_cnt; i++) {
         port_list.push_back(to_string(9900 + i));
     }
-
-    const char node_program[7]{"./node"};
     
     for (size_t i{0}; i < node_cnt; i++) {
-        vector<char*> node_args;
-        node_args.push_back(const_cast<char*>("./node"));
+        vector<char*> node_cmd_args;
+        node_cmd_args.push_back(const_cast<char*>("./node"));
 
         if (use_logging) {
-            node_args.push_back(const_cast<char*>("--log"));
+            node_cmd_args.push_back(const_cast<char*>("--log"));
             if (log_level_debug) {
-                node_args.push_back(const_cast<char*>("--debug"));
+                node_cmd_args.push_back(const_cast<char*>("--debug"));
             }
         }
-        node_args.push_back(const_cast<char*>("-p"));
-        node_args.push_back(const_cast<char*>(port_list[i].c_str()));
+        node_cmd_args.push_back(const_cast<char*>("-p"));
+        node_cmd_args.push_back(const_cast<char*>(port_list[i].c_str()));
 
-        node_args.push_back(const_cast<char*>("-a"));
+        node_cmd_args.push_back(const_cast<char*>("-a"));
         for (size_t j{0}; j < node_cnt; j++) {
             if (port_list[j] != port_list[i]) {
-                node_args.push_back(const_cast<char*>(port_list[j].c_str()));
+                node_cmd_args.push_back(const_cast<char*>(port_list[j].c_str()));
             }
         }
-        node_args.push_back(const_cast<char*>("-n"));
+        node_cmd_args.push_back(const_cast<char*>("-n"));
         for (size_t j{0}; j < network[i].size(); j++) {
-            node_args.push_back(const_cast<char*>(network[i][j].c_str()));
+            node_cmd_args.push_back(const_cast<char*>(network[i][j].c_str()));
         }
 
-        node_args.push_back(NULL);
+        node_cmd_args.push_back(NULL);
 
         pid_t node_pid{fork()};
         if (node_pid == -1) {
@@ -111,7 +115,7 @@ int main(int argc, char* argv[]) {
             fmt::print("[{}] Create node process with pid {}.\n", format(fg(fmt::color::magenta), "Controller"), node_pid);
             spdlog::info("Create node process with pid {}.", node_pid);
         } else {
-            char** node_argv{node_args.data()};
+            char** node_argv{node_cmd_args.data()};
             execv(node_program, &node_argv[0]);
             perror("execl");
             exit(EXIT_FAILURE);
