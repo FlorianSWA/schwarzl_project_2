@@ -84,26 +84,29 @@ int main(int argc, char* argv[]) {
     
     for (size_t i{0}; i < node_cnt; i++) {
         vector<char*> node_cmd_args;
-        node_cmd_args.push_back(const_cast<char*>("./node"));
+
+        node_cmd_args.push_back((char*)"./node");
 
         if (use_logging) {
-            node_cmd_args.push_back(const_cast<char*>("--log"));
+            node_cmd_args.push_back((char*)"--log");
             if (log_level_debug) {
-                node_cmd_args.push_back(const_cast<char*>("--debug"));
+                node_cmd_args.push_back((char*)"--debug");
             }
         }
-        node_cmd_args.push_back(const_cast<char*>("-p"));
-        node_cmd_args.push_back(const_cast<char*>(port_list[i].c_str()));
 
-        node_cmd_args.push_back(const_cast<char*>("-a"));
+        node_cmd_args.push_back((char*)"-p");
+        node_cmd_args.push_back(&port_list[i][0]);
+
+        node_cmd_args.push_back((char*)"-a");
         for (size_t j{0}; j < node_cnt; j++) {
             if (port_list[j] != port_list[i]) {
-                node_cmd_args.push_back(const_cast<char*>(port_list[j].c_str()));
+                node_cmd_args.push_back(&port_list[j][0]);
             }
         }
-        node_cmd_args.push_back(const_cast<char*>("-n"));
+
+        node_cmd_args.push_back((char*)"-n");
         for (size_t j{0}; j < network[i].size(); j++) {
-            node_cmd_args.push_back(const_cast<char*>(network[i][j].c_str()));
+            node_cmd_args.push_back(&network[i][j][0]);
         }
 
         node_cmd_args.push_back(NULL);

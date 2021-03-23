@@ -18,7 +18,7 @@ class Sender {
     int sender_port;
 
     // Send messsage to specified port
-    void send(std::string message, std::string port, int sender_port);
+    void send(std::string message, int port, int sender_port);
 
   public:
     Sender(int sender_port_, std::vector<int> nodes_) {

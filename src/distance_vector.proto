@@ -5,7 +5,7 @@ Date: 2021-03-10
 
 syntax = "proto3";
 
-package distance_vector;
+package proto_messages;
 
 message SimpleMessage{
     string text = 1;
@@ -20,4 +20,11 @@ message VectorUpdate{
     };
 
     repeated VectorEntry vector = 1;
+}
+
+message WrapperMesssage{
+    oneof contents{
+        SimpleMessage text_message = 1;
+        VectorUpdate update_message = 2;
+    }
 }

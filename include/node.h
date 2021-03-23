@@ -25,12 +25,6 @@ class Node {
     // Handler for message sending
     Sender message_sender;
 
-    // send message to all nodes (including self)
-    void broadcast_message(std::string message, int interval);
-
-    // send message to specified port
-    void send_to(int port, std::string message);
-
     // handle connection request on port
     void serve_request(asio::ip::tcp::socket&& sock);
 
