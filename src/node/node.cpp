@@ -47,10 +47,13 @@ void Node::run() {
 void Node::serve_request(tcp::socket&& sock) {;
     asio::streambuf buf;
     asio::read_until(sock, buf, '\n');
-    proto_messages::SimpleMessage message;
+    proto_messages::WrapperMessage message;
     istream is{&buf};
     message.ParseFromIstream(&is);
-    fmt::print("[{}] Received: " + message.text() + "\n", format(fg(fmt::color::cyan), "Node " + to_string(port)));
-    spdlog::info("Node {} received message: {}", this->port, message.text());
+    if (message.has_text_message()) {
+        fmt::print("[{}] Received: " + message.text_message().text() + "\n", format(fg(fmt::color::cyan), "Node " + to_string(port)));
+        spdlog::info("Node {} received message: {}", this->port, message.text_message().text());
+    }
+
     sock.close();
 }

@@ -22,7 +22,7 @@ message VectorUpdate{
     repeated VectorEntry vector = 1;
 }
 
-message WrapperMesssage{
+message WrapperMessage{
     oneof contents{
         SimpleMessage text_message = 1;
         VectorUpdate update_message = 2;

@@ -22,20 +22,23 @@ void Sender::send(string message, int port, int sender_port) {
     if (strm) {
         spdlog::debug("Opened connection between Node {} (sender) and Node {} (reciever).", sender_port, port);
         
-        proto_messages::SimpleMessage testMessage;
-        testMessage.set_text(message);
-        testMessage.set_source(sender_port);
-        testMessage.set_target(port);
+        proto_messages::WrapperMessage wrapper;
+        proto_messages::SimpleMessage *sm = new proto_messages::SimpleMessage;
+        sm->set_text(message);
+        sm->set_source(sender_port);
+        sm->set_target(port);
+        wrapper.set_allocated_text_message(sm);
 
-        unsigned long length{testMessage.ByteSizeLong()};
+        unsigned long length{wrapper.ByteSizeLong()};
         char* message_array = new char[length];
-        testMessage.SerializeToArray(message_array, length);
+        wrapper.SerializeToArray(message_array, length);
 
         strm.write(message_array, length);
         fmt::print("[{}] sent message: {}\n", format(fg(fmt::color::cyan), "Node " + to_string(sender_port)), message);
         strm.close();
         spdlog::debug("Closed connection between Node {} (sender) and Node {} (reciever).", sender_port, port);
         delete message_array;
+        delete sm;
     } else {
         spdlog::error("Error occured while connecting: {}", strm.error().message());
     }
