@@ -12,7 +12,7 @@ Desc: Class representing a node in the simulated network
 #include "spdlog/spdlog.h"
 #include "spdlog/fmt/fmt.h"
 #include "spdlog/fmt/bundled/color.h"
-#include "distance_vector.pb.h"
+#include "proto_messages.pb.h"
 
 
 using namespace asio::ip;
@@ -34,6 +34,7 @@ void Node::run() {
     asio::io_context ctxt;
     tcp::endpoint ep = tcp::endpoint(tcp::v4(), port);
     tcp::acceptor acceptor{ctxt, ep};
+    fmt::print("[{}] waiting for connection.\n", format(fg(fmt::color::cyan), "Node " + to_string(port)));
     acceptor.listen();
 
     while (true) {
@@ -50,9 +51,15 @@ void Node::serve_request(tcp::socket&& sock) {;
     proto_messages::WrapperMessage message;
     istream is{&buf};
     message.ParseFromIstream(&is);
-    if (message.has_text_message()) {
-        fmt::print("[{}] Received: " + message.text_message().text() + "\n", format(fg(fmt::color::cyan), "Node " + to_string(port)));
-        spdlog::info("Node {} received message: {}", this->port, message.text_message().text());
+    if (message.target() == port) {
+        if (message.has_text_message()) {
+            fmt::print("[{}] Received: " + message.text_message().text() + "\n", format(fg(fmt::color::cyan), "Node " + to_string(port)));
+            spdlog::info("Node {} received message: {}", this->port, message.text_message().text());
+        } else if (message.has_update_message()) {
+            this->message_sender.dv.parse_vector_update(message.source(), message.update_message());
+        }
+    } else {
+        this->message_sender.redirect(message);
     }
 
     sock.close();

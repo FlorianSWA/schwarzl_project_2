@@ -9,6 +9,7 @@ Desc: Class representing a node in the simulated network
 
 #include <string>
 #include <vector>
+#include "distance_vector.h"
 #include "sender.h"
 #include "asio.hpp"
 

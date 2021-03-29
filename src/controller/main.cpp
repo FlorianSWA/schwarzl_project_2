@@ -12,7 +12,7 @@ Date: 2021-02-01
 #include "spdlog/fmt/bundled/color.h"
 #include "CLI11.hpp"
 #include "utils.h"
-#include "distance_vector.pb.h"
+#include "proto_messages.pb.h"
 
 
 using namespace std;

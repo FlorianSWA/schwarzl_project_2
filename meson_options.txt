@@ -1,4 +1,4 @@
-option('asio_include_dir', type : 'string', value : '/mnt/c/Temp/cpp_libraries/asio/asio/include', description : 'the include dir of asio')
-option('cli11_include_dir', type : 'string', value : '/mnt/c/Temp/cpp_libraries/cli11', description : 'the dir containing CLI11.hpp')
-option('json_include_dir', type : 'string', value : 'mnt/c/Temp/cpp_libraries/include', description : 'the include dir of json')
-option('spdlog_include_dir', type : 'string', value : '/mnt/c/Temp/cpp_libraries/spdlog/include', description : 'the include dir of spdlog')
+option('asio_include_dir', type : 'string', value : '//home/florian/cpp_libraries/asio-1.18.1/include/', description : 'the include dir of asio')
+option('cli11_include_dir', type : 'string', value : '/home/florian/cpp_libraries/cli11', description : 'the dir containing CLI11.hpp')
+option('json_include_dir', type : 'string', value : '/home/florian/cpp_libraries/json', description : 'the include dir of json')
+option('spdlog_include_dir', type : 'string', value : '/home/florian/cpp_libraries/spdlog/include', description : 'the include dir of spdlog')

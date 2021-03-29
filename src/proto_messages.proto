@@ -9,22 +9,22 @@ package proto_messages;
 
 message SimpleMessage{
     string text = 1;
-    int32 source = 2;
-    int32 target = 3;
 }
 
-message VectorUpdate{
+message VectorUpdate{    
     message VectorEntry{
         int32 target = 1;
         int32 distance = 2;
     };
 
-    repeated VectorEntry vector = 1;
+    repeated VectorEntry vector = 3;
 }
 
 message WrapperMessage{
+    int32 target = 1;
+    int32 source = 2;
     oneof contents{
-        SimpleMessage text_message = 1;
-        VectorUpdate update_message = 2;
+        SimpleMessage text_message = 3;
+        VectorUpdate update_message = 4;
     }
 }

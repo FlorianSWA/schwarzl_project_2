@@ -33,7 +33,7 @@ gen = generator(protoc, \
   arguments : ['--proto_path=@CURRENT_SOURCE_DIR@/src', '--cpp_out=@BUILD_DIR@', '@PLAINNAME@'])
 
 # # change proto file accordingly
-generated = gen.process('src/distance_vector.proto')
+generated = gen.process('src/proto_messages.proto')
 # # end protobuf
 
 # subdir('SUBDIR1')
@@ -41,7 +41,7 @@ generated = gen.process('src/distance_vector.proto')
 inc_dir = include_directories('include')
 #src = ['src/main.cpp'] protobuf:
 src_controller = ['src/controller/main.cpp', 'src/controller/utils.cpp', generated]
-src_node = ['src/node/node.cpp', 'src/node/main.cpp', 'src/node/sender.cpp', generated]
+src_node = ['src/node/node.cpp', 'src/node/main.cpp', 'src/node/sender.cpp', 'src/node/distance_vector.cpp', generated]
 
 executable('distance_vector_sim',
            sources : src_controller,

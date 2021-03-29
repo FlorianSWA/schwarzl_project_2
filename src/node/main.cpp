@@ -8,7 +8,7 @@ Date: 2021-03-03
 #include "spdlog/sinks/rotating_file_sink.h"
 #include "CLI11.hpp"
 #include "node.h"
-#include "distance_vector_sim@exe/distance_vector.pb.h"
+#include "proto_messages.pb.h"
 
 
 using namespace std;
