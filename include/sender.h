@@ -12,10 +12,7 @@ class Sender {
     // array with the port numbers of neighbouring nodes
     std::vector<int> neighbours;
 
-    // array with port numbers of all nodes
-    std::vector<int> nodes;
-
-    int node_cnt;
+    size_t node_cnt;
 
     int sender_port;
 
@@ -23,7 +20,7 @@ class Sender {
     void send_text(std::string message, int port, int sender_port);
 
     // send vector update
-    void send_update();
+    void send_update(int target_port_);
 
   public:
     // Distance vector storage structure
@@ -31,8 +28,8 @@ class Sender {
 
     Sender(int sender_port_, std::vector<int> nodes_): dv(sender_port_) {
         sender_port = sender_port_;
-        nodes = nodes_;
-        node_cnt = nodes_.size() - 1;
+        neighbours = nodes_;
+        node_cnt = nodes_.size();
     }
     void operator()(std::string message);
 
