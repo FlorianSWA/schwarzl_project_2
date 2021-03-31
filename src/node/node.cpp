@@ -7,6 +7,7 @@ Desc: Class representing a node in the simulated network
 
 #include <thread>
 #include <random>
+#include <iostream>
 #include "node.h"
 #include "asio.hpp"
 #include "spdlog/spdlog.h"
@@ -22,6 +23,12 @@ void Node::run() {
     fmt::print("[{}] started.\n", format(fg(fmt::color::cyan), "Node " + to_string(port)));
     spdlog::info("Node {} started.", port);
 
+    ostringstream neighbour_debug;
+    for (size_t i{0}; i < neighbours.size(); i++) {
+        neighbour_debug << neighbours[i] << ", ";
+    }
+    spdlog::debug("Neighbouring nodes are: {}", neighbour_debug.str());
+
     random_device rd{};
     mt19937 gen{rd()};
     uniform_int_distribution<int> dis{6, 9};
@@ -34,7 +41,6 @@ void Node::run() {
     asio::io_context ctxt;
     tcp::endpoint ep = tcp::endpoint(tcp::v4(), port);
     tcp::acceptor acceptor{ctxt, ep};
-    fmt::print("[{}] waiting for connection.\n", format(fg(fmt::color::cyan), "Node " + to_string(port)));
     acceptor.listen();
 
     while (true) {

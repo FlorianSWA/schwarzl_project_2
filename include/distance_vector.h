@@ -8,9 +8,14 @@ Description: Class holding the distance vector with utilities to access it.
 #pragma once
 
 #include <vector>
-#include "vector_entry.h"
 #include "proto_messages.pb.h"
 
+
+struct VectorEntry{
+    int target;
+    int next_hop;
+    int distance;
+};
 
 class DistanceVector {
   private:

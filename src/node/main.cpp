@@ -49,7 +49,7 @@ int main(int argc, char* argv[]) {
     spdlog::set_default_logger(file_logger);
     spdlog::debug("Started node process {}.", port);
 
-    Node n1(port, nodes);
+    Node n1(port, neighbours);
     n1.run();
 
     return 0;

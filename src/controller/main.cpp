@@ -48,7 +48,7 @@ int main(int argc, char* argv[]) {
 
     CLI11_PARSE(app, argc, argv);
 
-    shared_ptr<spdlog::logger> file_logger = spdlog::rotating_logger_mt("file_logger", "./distance_vector.log", 1048576 * 5, 2);
+    shared_ptr<spdlog::logger> file_logger = spdlog::rotating_logger_mt("file_logger", "./controller.log", 1048576 * 5, 2);
 
     if (use_logging) {
         if (log_level_debug) {
@@ -64,23 +64,28 @@ int main(int argc, char* argv[]) {
     }
     spdlog::set_default_logger(file_logger);
 
-    vector<vector<string>> network{generate_network_graph(node_cnt * 2 - 1, node_cnt)};
-
-    ostringstream debug_msg;
-    for (size_t i{0}; i < network.size(); i++) {
-        debug_msg << "Vector[" << i << "] = [";
-        for (size_t j{0}; j < network[i].size(); j++) {
-           debug_msg << network[i][j];
-        }
-        debug_msg  << "]\n";
+    unsigned int vertice_cnt = node_cnt * 2 - 1;
+    if (vertice_cnt < node_cnt) {
+        vertice_cnt = node_cnt;
     }
-    spdlog::debug(debug_msg.str());
+    vector<vector<int>> network{generate_network_graph(vertice_cnt, node_cnt)};
 
     vector<string> port_list;
 
     for(size_t i{0}; i < node_cnt; i++) {
         port_list.push_back(to_string(9900 + i));
     }
+
+    ostringstream debug_msg;
+    debug_msg << "\n";
+    for (size_t i{0}; i < network.size(); i++) {
+        debug_msg << "[" << port_list[i] << "] = [";
+        for (size_t j{0}; j < network[i].size(); j++) {
+           debug_msg << "(ID: " << network[i][j] << ", port: " << port_list[network[i][j]] << ") ";
+        }
+        debug_msg  << "]\n";
+    }
+    spdlog::debug(debug_msg.str());
     
     for (size_t i{0}; i < node_cnt; i++) {
         vector<char*> node_cmd_args;
@@ -97,16 +102,17 @@ int main(int argc, char* argv[]) {
         node_cmd_args.push_back((char*)"-p");
         node_cmd_args.push_back(&port_list[i][0]);
 
-        node_cmd_args.push_back((char*)"-a");
+/*         node_cmd_args.push_back((char*)"-a");
         for (size_t j{0}; j < node_cnt; j++) {
             if (port_list[j] != port_list[i]) {
                 node_cmd_args.push_back(&port_list[j][0]);
             }
-        }
+        } */
 
         node_cmd_args.push_back((char*)"-n");
         for (size_t j{0}; j < network[i].size(); j++) {
-            node_cmd_args.push_back(&network[i][j][0]);
+            //spdlog::debug("Next node port {}", network[i][j]);
+            node_cmd_args.push_back(&port_list[(network[i][j])][0]);
         }
 
         node_cmd_args.push_back(NULL);

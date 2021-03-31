@@ -17,7 +17,7 @@ class Sender {
     int sender_port;
 
     // Send text messsage to specified port
-    void send_text(std::string message, int port, int sender_port);
+    void send_text(std::string message, int target_port_, int sender_port);
 
     // send vector update
     void send_update(int target_port_);
