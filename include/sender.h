@@ -12,9 +12,8 @@ class Sender {
     // array with the port numbers of neighbouring nodes
     std::vector<int> neighbours;
 
+    // total amount of nodes in network
     size_t node_cnt;
-
-    int sender_port;
 
     // Send text messsage to specified port
     void send_text(std::string message, int target_port_, int sender_port);
@@ -27,11 +26,11 @@ class Sender {
     DistanceVector dv;
 
     Sender(int sender_port_, std::vector<int> nodes_): dv(sender_port_) {
-        sender_port = sender_port_;
         neighbours = nodes_;
         node_cnt = nodes_.size();
     }
     void operator()(std::string message);
 
+    // routes message to next hop
     void redirect(proto_messages::WrapperMessage message_);
 };

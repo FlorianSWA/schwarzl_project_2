@@ -13,6 +13,7 @@ Date: 2021-02-01
 #include "CLI11.hpp"
 #include "utils.h"
 #include "proto_messages.pb.h"
+#include "json.hpp"
 
 
 using namespace std;
@@ -36,17 +37,51 @@ int main(int argc, char* argv[]) {
 
     bool use_logging{false};
     bool log_level_debug{false};
-    size_t node_cnt{4};
-    string config_file;
+    size_t node_cnt{5};
+    string config_file{"N/A"};
 
     const char node_program[7]{"./node"};
 
     app.add_option("node count", node_cnt, "Total number of nodes.");
     CLI::Option* log_flag{app.add_flag("-l, --log", use_logging, "Write log file dist_sync_log.log.")};
     app.add_flag("-d, --debug", log_level_debug, "Set log level to debug.")->needs(log_flag);
-    app.add_flag("-f, --file", config_file, "Path to json config file.");
+    app.add_option("-f, --file", config_file, "Path to json config file.")->check(CLI::ExistingFile);
 
     CLI11_PARSE(app, argc, argv);
+
+    if (config_file != "N/A") {
+        ifstream config_ifstream(config_file);
+        try {
+            nlohmann::json json_config;
+            config_ifstream >> json_config;
+
+            if (json_config.contains("nodes")) {
+                if (json_config["nodes"].is_number_unsigned()) {
+                    node_cnt = json_config["nodes"];
+                } else {
+                    spdlog::error("Wrong parameter type for nodes, using default value. Expected unsigned integer.");
+                }
+            } else {
+                spdlog::info("Missing parameter node count. Continuing with default values.");
+            }
+            if (json_config.contains("log")) {
+                if (json_config["log"].is_boolean()) {
+                    use_logging = true;
+                    if (json_config.contains("debug")) {
+                        if (json_config["debug"].is_boolean()) {
+                            log_level_debug = true;
+                        } else {
+                            spdlog::error("Wrong parameter type for debug, using default value. Expected boolean.");
+                        }
+                    }
+                } else {
+                    spdlog::error("Wrong parameter type for log, using default value. Expected boolean.");
+                }
+            }
+        } catch (const nlohmann::detail::parse_error &json_err) {
+            spdlog::error("{}. Continuing with default values.", json_err.what());
+        }
+    }
 
     shared_ptr<spdlog::logger> file_logger = spdlog::rotating_logger_mt("file_logger", "./controller.log", 1048576 * 5, 2);
 
@@ -101,13 +136,6 @@ int main(int argc, char* argv[]) {
 
         node_cmd_args.push_back((char*)"-p");
         node_cmd_args.push_back(&port_list[i][0]);
-
-/*         node_cmd_args.push_back((char*)"-a");
-        for (size_t j{0}; j < node_cnt; j++) {
-            if (port_list[j] != port_list[i]) {
-                node_cmd_args.push_back(&port_list[j][0]);
-            }
-        } */
 
         node_cmd_args.push_back((char*)"-n");
         for (size_t j{0}; j < network[i].size(); j++) {

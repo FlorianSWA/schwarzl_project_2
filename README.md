@@ -7,3 +7,4 @@ NVS Projekt 2, Schwarzl Florian
 * [spdlog](https://github.com/gabime/spdlog)
 * [CLI11](https://github.com/CLIUtils/CLI11)
 * [Google Protocol Buffer](https://developers.google.com/protocol-buffers/)
+* [JSON  for modern C++](https://github.com/nlohmann/json)

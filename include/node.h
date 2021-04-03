@@ -17,9 +17,6 @@ Desc: Class representing a node in the simulated network
 class Node {
 
   private:
-    // Port number of this node
-    int port{9999};
-
     // vector with the port numbers of all nodes
     std::vector<int> neighbours;
 
@@ -31,7 +28,6 @@ class Node {
 
   public:
     Node(int port_, std::vector<int> neighbours_): message_sender(port_, neighbours_) {
-        port = port_;
         neighbours = neighbours_;
     };
 

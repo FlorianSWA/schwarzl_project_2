@@ -20,8 +20,8 @@ using namespace asio::ip;
 using namespace std;
 
 void Node::run() {
-    fmt::print("[{}] started.\n", format(fg(fmt::color::cyan), "Node " + to_string(port)));
-    spdlog::info("Node {} started.", port);
+    fmt::print("[{}] started.\n", format(fg(fmt::color::cyan), "Node " + to_string(this->message_sender.dv.port)));
+    spdlog::info("Node {} started.", this->message_sender.dv.port);
 
     ostringstream neighbour_debug;
     for (size_t i{0}; i < neighbours.size(); i++) {
@@ -29,17 +29,12 @@ void Node::run() {
     }
     spdlog::debug("Neighbouring nodes are: {}", neighbour_debug.str());
 
-    random_device rd{};
-    mt19937 gen{rd()};
-    uniform_int_distribution<int> dis{6, 9};
-
-    string msg{"Testing new message from " + to_string(port)};
+    string msg{"Testing new message from " + to_string(this->message_sender.dv.port)};
     thread sender_thd{ref(message_sender), msg};
-    //thread sender_thd{&Node::broadcast_message, this, msg, dis(gen)};
     sender_thd.detach();
 
     asio::io_context ctxt;
-    tcp::endpoint ep = tcp::endpoint(tcp::v4(), port);
+    tcp::endpoint ep = tcp::endpoint(tcp::v4(), this->message_sender.dv.port);
     tcp::acceptor acceptor{ctxt, ep};
     acceptor.listen();
 
@@ -57,10 +52,10 @@ void Node::serve_request(tcp::socket&& sock) {;
     proto_messages::WrapperMessage message;
     istream is{&buf};
     message.ParseFromIstream(&is);
-    if (message.target() == port) {
+    if (message.target() == this->message_sender.dv.port) {
         if (message.has_text_message()) {
-            fmt::print("[{}] Received: " + message.text_message().text() + "\n", format(fg(fmt::color::cyan), "Node " + to_string(port)));
-            spdlog::info("Node {} received message: {}", this->port, message.text_message().text());
+            fmt::print("[{}] Received: " + message.text_message().text() + "\n", format(fg(fmt::color::cyan), "Node " + to_string(this->message_sender.dv.port)));
+            spdlog::info("Received message: {}", this->message_sender.dv.port, message.text_message().text());
         } else if (message.has_update_message()) {
             this->message_sender.dv.parse_vector_update(message.source(), message.update_message());
         }
