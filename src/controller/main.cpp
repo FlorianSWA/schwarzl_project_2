@@ -6,6 +6,7 @@ Date: 2021-02-01
 #include <iostream>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <random>
 #include "spdlog/fmt/fmt.h"
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/rotating_file_sink.h"
@@ -37,15 +38,17 @@ int main(int argc, char* argv[]) {
 
     bool use_logging{false};
     bool log_level_debug{false};
+    bool simulate_error{false};
     size_t node_cnt{5};
     string config_file{"N/A"};
 
     const char node_program[7]{"./node"};
 
-    app.add_option("node count", node_cnt, "Total number of nodes.");
+    app.add_option("node count", node_cnt, "Total number of nodes. Must be > 0.")->check(CLI::PositiveNumber);
     CLI::Option* log_flag{app.add_flag("-l, --log", use_logging, "Write log file dist_sync_log.log.")};
     app.add_flag("-d, --debug", log_level_debug, "Set log level to debug.")->needs(log_flag);
     app.add_option("-f, --file", config_file, "Path to json config file.")->check(CLI::ExistingFile);
+    app.add_flag("-e, --error", simulate_error, "Simulate failure of one node");
 
     CLI11_PARSE(app, argc, argv);
 
@@ -83,9 +86,9 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    shared_ptr<spdlog::logger> file_logger = spdlog::rotating_logger_mt("file_logger", "./controller.log", 1048576 * 5, 2);
-
+    // set logging settings
     if (use_logging) {
+        shared_ptr<spdlog::logger> file_logger = spdlog::rotating_logger_mt("file_logger", "./controller.log", 1048576 * 5, 2);
         if (log_level_debug) {
             file_logger->set_level(spdlog::level::debug);
             file_logger->flush_on(spdlog::level::debug);
@@ -93,11 +96,11 @@ int main(int argc, char* argv[]) {
             file_logger->set_level(spdlog::level::info);
             file_logger->flush_on(spdlog::level::info);
         }
+        spdlog::set_default_logger(file_logger);
     } else {
-        file_logger->set_level(spdlog::level::off);
-        file_logger->flush_on(spdlog::level::off);
+        spdlog::default_logger()->set_level(spdlog::level::off);
+        spdlog::default_logger()->flush_on(spdlog::level::off);
     }
-    spdlog::set_default_logger(file_logger);
 
     unsigned int vertice_cnt = node_cnt * 2 - 1;
     if (vertice_cnt < node_cnt) {
@@ -107,10 +110,20 @@ int main(int argc, char* argv[]) {
 
     vector<string> port_list;
 
-    for(size_t i{0}; i < node_cnt; i++) {
-        port_list.push_back(to_string(9900 + i));
+    for(unsigned long int j{0}; j < node_cnt; j++) {
+        port_list.push_back(to_string(9900 + j));
     }
 
+    size_t failure_node;
+    if (simulate_error) {
+        random_device rd{};
+        mt19937 fail_node_gen{rd()};
+        uniform_int_distribution<unsigned long int> fail_node_dis{0, node_cnt - 1ul};
+        failure_node = fail_node_dis(fail_node_gen);
+        spdlog::info("Node {} is set to fail.", port_list[failure_node]);
+    }
+
+    // debug output of network graph
     ostringstream debug_msg;
     debug_msg << "\n";
     for (size_t i{0}; i < network.size(); i++) {
@@ -122,6 +135,7 @@ int main(int argc, char* argv[]) {
     }
     spdlog::debug(debug_msg.str());
     
+    // add parameters and start node in loop
     for (size_t i{0}; i < node_cnt; i++) {
         vector<char*> node_cmd_args;
 
@@ -141,6 +155,11 @@ int main(int argc, char* argv[]) {
         for (size_t j{0}; j < network[i].size(); j++) {
             //spdlog::debug("Next node port {}", network[i][j]);
             node_cmd_args.push_back(&port_list[(network[i][j])][0]);
+        }
+        if (simulate_error) {
+            if (i == failure_node) {
+                node_cmd_args.push_back((char*)"-e");
+            }
         }
 
         node_cmd_args.push_back(NULL);

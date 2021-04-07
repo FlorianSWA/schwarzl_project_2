@@ -39,6 +39,13 @@ void Node::run() {
     acceptor.listen();
 
     while (true) {
+        if (failure) {
+            this->fail_cnt++;
+            if (this->fail_cnt > 10ul * direct_neighbours) {
+                spdlog::info("Node is simulating failure and shutting down.");
+                exit(103);
+            } 
+        }
         tcp::socket sock{ctxt};
         acceptor.accept(sock);
         thread handler{&Node::serve_request, this, move(sock)};

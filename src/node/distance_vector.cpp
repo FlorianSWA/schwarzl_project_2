@@ -9,6 +9,7 @@ Description: Class holding the distance vector with utilities to access it.
 #include "distance_vector.h"
 #include "spdlog/spdlog.h"
 #include "spdlog/fmt/fmt.h"
+#include "spdlog/fmt/bundled/color.h"
 
 
 using namespace std;
@@ -20,12 +21,12 @@ void DistanceVector::add_or_update_entry(int target_port_, int next_hop_, int di
             if (vector_storage[i].target == target_port_) {
                 found = true;
                 if (distance_ < vector_storage[i].distance) {
-                    VectorEntry entry;
-                    entry.target = target_port_;
-                    entry.next_hop = next_hop_;
-                    entry.distance = distance_;
-                    this->vector_storage[i] = entry;
+                    this->vector_storage[i].next_hop = next_hop_;
+                    this->vector_storage[i].distance = distance_;
                     spdlog::debug("Update distance vector entry to for {} to (target={}, next_hop={}, distance={})", target_port_, target_port_, next_hop_,  distance_);
+                } else if (distance_ == INT16_MAX) {
+                    this->vector_storage[i].next_hop = next_hop_;
+                    this->vector_storage[i].distance = distance_;
                 }
             }
         }
@@ -64,13 +65,31 @@ void DistanceVector::init(vector<int> neighbours_) {
 
 int DistanceVector::get_next_hop(int target_) {
     int next_hop{0};
-    int shortest_distance{INT_MAX};
+    int shortest_distance{INT16_MAX};
     for (int i{0}; i < vector_size; i++) {
         if (this->vector_storage[i].target == target_ && this->vector_storage[i].distance < shortest_distance) {
             next_hop = this->vector_storage[i].next_hop;
             shortest_distance = this->vector_storage[i].distance;
         }
     }
-    spdlog::debug("Nexto");
     return next_hop;
+}
+
+void DistanceVector::set_error_distance(int target_port_) {
+    for (int i{0}; i < vector_size; i++) {
+        if (this->vector_storage[i].target == target_port_) {
+            this->vector_storage[i].distance = INT16_MAX;
+        }
+    }
+}
+
+bool DistanceVector::is_reachable(int target_port_) {
+    for (int i{0}; i < this->vector_size; i++) {
+        if (this->vector_storage[i].target == target_port_ && vector_storage[i].distance == INT16_MAX) {
+            spdlog::info("Target {} is set as not reachable, sending will be aborted.", target_port_);
+            fmt::print("[{}] Target {} is set as not reachable.\n", format(fg(fmt::color::cyan), "Node " + to_string(this->port)), target_port_);
+            return false;
+        }
+    }
+    return true;
 }

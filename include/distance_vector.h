@@ -47,4 +47,10 @@ class DistanceVector {
 
     // Returns the next hop for given target
     int get_next_hop(int target_);
+
+    // sets disttance to maximum, indicating connection error
+    void set_error_distance(int target_port_);
+
+    // returns true if the targets distance is not set to infinite
+    bool is_reachable(int target_port_);
 };
