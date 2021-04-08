@@ -7,6 +7,7 @@ Date: 2021-02-01
 #include <unistd.h>
 #include <sys/wait.h>
 #include <random>
+#include <chrono>
 #include "spdlog/fmt/fmt.h"
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/rotating_file_sink.h"
@@ -28,6 +29,7 @@ void sigint_handler(int signal_number) {
         kill(node_process_pids[i], SIGTERM);
     }
     while ((wait(nullptr)) > 0);
+    fmt::print("[{}] All subprocesses terminated successfully.\n", format(fg(fmt::color::magenta), "Controller"));
     _exit(103);
 }
 
@@ -48,7 +50,7 @@ int main(int argc, char* argv[]) {
     CLI::Option* log_flag{app.add_flag("-l, --log", use_logging, "Write log file dist_sync_log.log.")};
     app.add_flag("-d, --debug", log_level_debug, "Set log level to debug.")->needs(log_flag);
     app.add_option("-f, --file", config_file, "Path to json config file.")->check(CLI::ExistingFile);
-    app.add_flag("-e, --error", simulate_error, "Simulate failure of one node");
+    app.add_flag("--failure", simulate_error, "Simulate failure of one node");
 
     CLI11_PARSE(app, argc, argv);
 
@@ -69,10 +71,10 @@ int main(int argc, char* argv[]) {
             }
             if (json_config.contains("log")) {
                 if (json_config["log"].is_boolean()) {
-                    use_logging = true;
+                    use_logging = json_config["log"];
                     if (json_config.contains("debug")) {
                         if (json_config["debug"].is_boolean()) {
-                            log_level_debug = true;
+                            log_level_debug = json_config["debug"];
                         } else {
                             spdlog::error("Wrong parameter type for debug, using default value. Expected boolean.");
                         }
@@ -81,6 +83,14 @@ int main(int argc, char* argv[]) {
                     spdlog::error("Wrong parameter type for log, using default value. Expected boolean.");
                 }
             }
+            if (json_config.contains("failure")) {
+                if (json_config["failure"].is_boolean()) {
+                    simulate_error = json_config["failure"];
+                } else {
+                    spdlog::error("Wrong parameter type for failure, using default value. Expected boolean.");
+                }
+            }
+            config_ifstream.close();
         } catch (const nlohmann::detail::parse_error &json_err) {
             spdlog::error("{}. Continuing with default values.", json_err.what());
         }
@@ -108,10 +118,13 @@ int main(int argc, char* argv[]) {
     }
     vector<vector<int>> network{generate_network_graph(vertice_cnt, node_cnt)};
 
-    vector<string> port_list;
+    vector<NodeData> nodes;
 
     for(unsigned long int j{0}; j < node_cnt; j++) {
-        port_list.push_back(to_string(9900 + j));
+        NodeData new_node;
+        new_node.id = j;
+        new_node.port = "990" + to_string(j);
+        nodes.push_back(new_node);
     }
 
     size_t failure_node;
@@ -120,16 +133,17 @@ int main(int argc, char* argv[]) {
         mt19937 fail_node_gen{rd()};
         uniform_int_distribution<unsigned long int> fail_node_dis{0, node_cnt - 1ul};
         failure_node = fail_node_dis(fail_node_gen);
-        spdlog::info("Node {} is set to fail.", port_list[failure_node]);
+        nodes[failure_node].failure = true;
+        spdlog::info("Node {} is set to fail.", nodes[failure_node].port);
     }
 
     // debug output of network graph
     ostringstream debug_msg;
     debug_msg << "\n";
     for (size_t i{0}; i < network.size(); i++) {
-        debug_msg << "[" << port_list[i] << "] = [";
+        debug_msg << "[" << nodes[i].port << "] = [";
         for (size_t j{0}; j < network[i].size(); j++) {
-           debug_msg << "(ID: " << network[i][j] << ", port: " << port_list[network[i][j]] << ") ";
+           debug_msg << "(ID: " << network[i][j] << ", port: " << nodes[network[i][j]].port << ") ";
         }
         debug_msg  << "]\n";
     }
@@ -149,12 +163,12 @@ int main(int argc, char* argv[]) {
         }
 
         node_cmd_args.push_back((char*)"-p");
-        node_cmd_args.push_back(&port_list[i][0]);
+        node_cmd_args.push_back(&nodes[i].port[0]);
 
         node_cmd_args.push_back((char*)"-n");
         for (size_t j{0}; j < network[i].size(); j++) {
             //spdlog::debug("Next node port {}", network[i][j]);
-            node_cmd_args.push_back(&port_list[(network[i][j])][0]);
+            node_cmd_args.push_back(&nodes[(network[i][j])].port[0]);
         }
         if (simulate_error) {
             if (i == failure_node) {
@@ -163,20 +177,27 @@ int main(int argc, char* argv[]) {
         }
 
         node_cmd_args.push_back(NULL);
+        nodes[i].cmd_args = node_cmd_args;
 
-        pid_t node_pid{fork()};
-        if (node_pid == -1) {
+        nodes[i].pid = fork();
+        if (nodes[i].pid == -1) {
             spdlog::error("Creating node process {} failed.", i);
-        } else if (node_pid > 0) {
-            fmt::print("[{}] Create node process with pid {}.\n", format(fg(fmt::color::magenta), "Controller"), node_pid);
-            spdlog::info("Create node process with pid {}.", node_pid);
+        } else if (nodes[i].pid> 0) {
+            fmt::print("[{}] Create node process with pid {}.\n", format(fg(fmt::color::magenta), "Controller"), nodes[i].pid);
+            spdlog::info("Create node process with pid {}.", nodes[i].pid);
         } else {
             char** node_argv{node_cmd_args.data()};
             execv(node_program, &node_argv[0]);
             perror("execl");
             exit(EXIT_FAILURE);
         }
-    }    
+    }
+    for (size_t i{0}; i < node_cnt; i++) {
+        if (nodes[i].failure && simulate_error) {
+            thread fail_thread{kill_node, nodes[i].pid, chrono::seconds(30)};
+            fail_thread.detach();
+        }
+    }
 
     pid_t node_pid;
     while ((node_pid = wait(nullptr)) > 0) {

@@ -25,16 +25,50 @@ int main(int argc, char* argv[]) {
     bool use_logging{false};
     bool log_level_debug{false};
     bool simulate_error{false};
-    string json_file{"N/A"};
+    string config_file{"N/A"};
 
     app.add_option("-p, --port", port, "The port of this node.")->required();
     app.add_option("-n, --neighbours", neighbours, "Vector of neighbouring node ports.");
     CLI::Option* log_flag{app.add_flag("-l, --log", use_logging, "Write log file node_<port>.log.")};
     app.add_flag("-d, --debug", log_level_debug, "Set log level to debug.")->needs(log_flag);
-    app.add_option("-f, --file", json_file, "Path to JSON config file.");
-    app.add_flag("-e, --error", simulate_error, "Tells this node to simulate a failure");
+    app.add_option("-f, --file", config_file, "Path to JSON config file.")->check(CLI::ExistingFile);
+    //app.add_flag("-e, --error", simulate_error, "Tells this node to simulate a failure");
 
     CLI11_PARSE(app, argc, argv);
+
+    if (config_file != "N/A") {
+        ifstream config_ifstream(config_file);
+        try {
+            nlohmann::json json_config;
+            config_ifstream >> json_config;
+
+            if (json_config.contains("port")) {
+                if (json_config["port"].is_number_unsigned()) {
+                    port = json_config["port"];
+                } else {
+                    spdlog::error("Wrong parameter type for port, using default value. Expected unsigned integer.");
+                }
+            } else {
+                spdlog::info("Missing parameter port. Continuing with default values.");
+            }
+            if (json_config.contains("log")) {
+                if (json_config["log"].is_boolean()) {
+                    use_logging = true;
+                    if (json_config.contains("debug")) {
+                        if (json_config["debug"].is_boolean()) {
+                            log_level_debug = true;
+                        } else {
+                            spdlog::error("Wrong parameter type for debug, using default value. Expected boolean.");
+                        }
+                    }
+                } else {
+                    spdlog::error("Wrong parameter type for log, using default value. Expected boolean.");
+                }
+            }
+        } catch (const nlohmann::detail::parse_error &json_err) {
+            spdlog::error("{}. Continuing with default values.", json_err.what());
+        }
+    }
 
     // set logging settings
     if (use_logging) {

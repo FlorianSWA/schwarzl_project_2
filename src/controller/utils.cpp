@@ -4,6 +4,8 @@ Date: 2021-03-05
 */
 
 #include <random>
+#include <sys/wait.h>
+#include <chrono>
 #include "utils.h"
 #include "spdlog/spdlog.h"
 
@@ -54,4 +56,9 @@ vector<vector<int>> generate_network_graph(int edge_cnt, int node_cnt) {
     }
     delete[] edge;
     return returnVec;
+}
+
+void kill_node(pid_t pid_, chrono::seconds delay_) {
+    this_thread::sleep_for(delay_);
+    kill(pid_, SIGKILL);
 }
