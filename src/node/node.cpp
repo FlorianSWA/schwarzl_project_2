@@ -22,10 +22,12 @@ using namespace std;
 void Node::run() {
     fmt::print("[{}] started.\n", format(fg(fmt::color::cyan), "Node " + to_string(this->message_sender.dv.port)));
     spdlog::info("Node {} started.", this->message_sender.dv.port);
-    if (this->message_sender.dv.failed_connection != -1) {
+    if (this->message_sender.dv.failed_connection != 0) {
+        spdlog::debug("Connection to node {} is set to fail.", this->message_sender.dv.failed_connection);
         thread fail_timer{[this] (){
             this_thread::sleep_for(chrono::seconds(30));
-            this->message_sender.dv.start_failure = true;
+            this->message_sender.dv.start_fail();
+            fmt::print("[{}] is simulating connection failure.\n", format(fg(fmt::color::dark_red), "Node " + to_string(this->message_sender.dv.port)));
         }};
         fail_timer.detach();
     }

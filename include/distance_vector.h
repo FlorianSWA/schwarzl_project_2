@@ -22,6 +22,8 @@ class DistanceVector {
     // Mutex for vector update
     std::mutex update_mutex;
 
+    std::mutex fail_check_mtx;
+
     // Update distance vector with new values
     void update_vector(int target_, int new_distance_);
 
@@ -41,7 +43,7 @@ class DistanceVector {
     // port of this node
     int port;
 
-    // port of thee neighbour whose connection failed
+    // port of the neighbour whose connection failed
     int failed_connection;
 
     // flag to start simulating connection failure
@@ -70,4 +72,10 @@ class DistanceVector {
 
     // returns true if the targets distance is not set to infinite
     bool is_reachable(int target_port_);
+
+    // returns true if port is simulating failure
+    bool check_for_failure(int port_);
+
+    // sets start_failure to true
+    void start_fail();
 };

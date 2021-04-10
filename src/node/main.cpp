@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
     vector<int> neighbours;
     bool use_logging{false};
     bool log_level_debug{false};
-    int failure{-1};
+    int failure{0};
     string config_file{"N/A"};
 
     app.add_option("-p, --port", port, "The port of this node.")->required();

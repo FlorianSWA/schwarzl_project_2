@@ -74,7 +74,7 @@ void Sender::operator()(string message) {
 
 void Sender::redirect(proto_messages::WrapperMessage message_) {
     int next_hop{this->dv.get_next_hop(message_.target())};
-    if (next_hop != this->dv.failed_connection && !this->dv.start_failure) {
+    if (this->dv.check_for_failure(next_hop)) {
         if (next_hop != message_.prev_hop()) {
             asio::ip::tcp::iostream strm{"localhost", to_string(next_hop)};
             if (strm) {
@@ -93,6 +93,8 @@ void Sender::redirect(proto_messages::WrapperMessage message_) {
             spdlog::error("Recursive message detected. Message will be dropped.");
         }
     } else {
+        spdlog::debug("Distance set to infinity for because next_hop = {}, failed_connection = {} and start_failure = {}"
+            , next_hop, this->dv.failed_connection, this->dv.start_failure);
         this->dv.set_error_distance(next_hop);
         spdlog::info("Connection between this node and {} is simulating a failure.", next_hop);
     }
@@ -121,15 +123,12 @@ void Sender::send_update(int target_port_) {
         spdlog::debug("Closed connection between Node {} (sender) and Node {} (reciever).", this->dv.port, target_port_);
     } else {
         spdlog::error("Error occured while connecting to node {}: {}", target_port_, strm.error().message());
-        // for (int i{0}; i < this->dv.vector_size; i++) {
-        //     send_update_to_neighbours();
-        // }
     }
 }
 
 void Sender::send_update_to_neighbours() {
     for (size_t i{0}; i < this->dv.neighbours.size(); i++) {
-        if (this->dv.neighbours[i] != this->dv.failed_connection && !this->dv.start_failure) {
+        if (this->dv.check_for_failure(this->dv.neighbours[i])) {
             send_update(this->dv.neighbours[i]);
         }
     }

@@ -9,11 +9,12 @@ Das Programm wird durch den Aufruf von `distance_vector_sim` über die Kommandoz
 Die folgende Tabelle enthält alle Parameter, welche über die Kommandozeile an das Programm übergeben werden können.
 | Parametername | Datentyp        | Standardwert | Beschreibung |
 | ------------- | --------------- | ------------ | ------------ |
-|               | ganze Zahl >= 0 | 5            | Anzahl der Netzwerkknoten |
+|               | ganze Zahl >= 0 | 7            | Anzahl der Netzwerkknoten |
 | -h, --help    |                 |              | Gibt die Hilfe aus |
 | -l, --log     | boolean         | false        | Aktiviert Logging für Hauptprozess und alle Netzwerkknoten |
 | -d, --debug   | boolean         | false        | Setzt Log-Level auf Debug. Benötigt --log |
 | -f, --file    | string          |              | Konfigurationsdatei im JSON-Format |
+| --failure     | boolean         | false        | Aktiviert die Simulation eines verbindungsausfalls |
 
 Die JSON-Datei zur Konfiguration hat folgende Felder:
 | Feldname | Datentyp        | Beschreibung |
@@ -21,6 +22,7 @@ Die JSON-Datei zur Konfiguration hat folgende Felder:
 | nodes    | ganze Zahl >= 0 | Anzahl der Netzwerkknoten |
 | log      | boolean         | Aktiviert Logging für Hauptprozess und alle Netzwerkknoten |
 | debug    | boolean         | Setzt Log-Level auf Debug. Benötigt --log |
+| failure  | boolean         | Aktiviert die Simulation eines verbindungsausfalls |
 
 
 ## Verwendete Software

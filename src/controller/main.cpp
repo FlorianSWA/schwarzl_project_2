@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
     bool use_logging{false};
     bool log_level_debug{false};
     bool simulate_error{false};
-    size_t node_cnt{5};
+    size_t node_cnt{7};
     string config_file{"N/A"};
 
     const char node_program[7]{"./node"};
@@ -112,7 +112,7 @@ int main(int argc, char* argv[]) {
         spdlog::default_logger()->flush_on(spdlog::level::off);
     }
 
-    unsigned int vertice_cnt = node_cnt + (int) ((node_cnt / 2) * 3);
+    unsigned int vertice_cnt = node_cnt + 2;
 
     vector<vector<int>> network{generate_network_graph(vertice_cnt, node_cnt)};
 
@@ -140,8 +140,8 @@ int main(int argc, char* argv[]) {
         nodes[failure_node_2].failed_connection = nodes[failure_node_1].port;
 
         spdlog::info("Connection between node {} and node {}", nodes[failure_node_1].port, nodes[failure_node_2].port);
-        spdlog::info("Failing node 1: {} = {}", nodes[failure_node_1].failed_connection, nodes[failure_node_2].port);
-        spdlog::info("Failing ndoe 2: {} = {}", nodes[failure_node_2].failed_connection, nodes[failure_node_1].port);
+        spdlog::debug("Failing node 1: {} = {}", nodes[failure_node_1].failed_connection, nodes[failure_node_2].port);
+        spdlog::debug("Failing node 2: {} = {}", nodes[failure_node_2].failed_connection, nodes[failure_node_1].port);
     }
 
     // debug output of network graph

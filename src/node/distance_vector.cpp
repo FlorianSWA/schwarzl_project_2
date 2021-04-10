@@ -20,14 +20,15 @@ void DistanceVector::add_or_update_entry(int target_port_, int next_hop_, int di
         for (int i{0}; i < this->vector_size; i++) {
             if (vector_storage[i].target == target_port_) {
                 found = true;
-                if (distance_ < vector_storage[i].distance && this->vector_storage[i].distance != INT16_MAX) {
+                if (distance_ < vector_storage[i].distance) {
                     this->vector_storage[i].next_hop = next_hop_;
                     this->vector_storage[i].distance = distance_;
-                } if (distance_ == INT16_MAX && next_hop_ == this->vector_storage[i].next_hop) {
+                    spdlog::debug("Update distance vector entry to for {} to (target={}, next_hop={}, distance={})", target_port_, target_port_, next_hop_,  distance_);
+                } else if (distance_ == INT16_MAX && next_hop_ == this->vector_storage[i].next_hop) {
                     this->vector_storage[i].next_hop = next_hop_;
                     this->vector_storage[i].distance = distance_;
+                    spdlog::debug("Update distance vector entry to for {} to (target={}, next_hop={}, distance={})", target_port_, target_port_, next_hop_,  distance_);
                 }
-                spdlog::debug("Update distance vector entry to for {} to (target={}, next_hop={}, distance={})", target_port_, target_port_, next_hop_,  distance_);
             }
         }
         
@@ -84,7 +85,7 @@ bool DistanceVector::is_reachable(int target_port_) {
     for (int i{0}; i < this->vector_size; i++) {
         if (this->vector_storage[i].target == target_port_ && vector_storage[i].distance == INT16_MAX) {
             spdlog::info("Target {} is set as not reachable, sending will be aborted.", target_port_);
-            fmt::print("[{}] Target {} is set as not reachable.\n", format(fg(fmt::color::cyan), "Node " + to_string(this->port)), target_port_);
+            fmt::print("[{}] Target {} is set as not reachable.\n", format(fg(fmt::color::dark_red), "Node " + to_string(this->port)), target_port_);
             return false;
         }
     }
@@ -97,4 +98,17 @@ void DistanceVector::print_debug() {
         debug_output_strm << "\n (target=" << this->vector_storage[i].target << ", next_hop=" << this->vector_storage[i].next_hop << ", distance=" << this->vector_storage[i].distance << ")";
     }
     spdlog::debug(debug_output_strm.str());
+}
+
+bool DistanceVector::check_for_failure(int port_) {
+    lock_guard<mutex> lg{fail_check_mtx};
+    if (port_ == this->failed_connection && this->start_failure) {
+        return false;
+    }
+    return true;
+}
+
+void DistanceVector::start_fail() {
+    lock_guard<mutex> lg{this->fail_check_mtx};
+    this->start_failure = true;
 }
