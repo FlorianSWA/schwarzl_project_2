@@ -21,12 +21,12 @@ Date: 2021-02-01
 using namespace std;
 
 
-vector<pid_t> node_process_pids;
+vector<NodeData> nodes;
 
 void sigint_handler(int signal_number) {
-    for (size_t i{0}; i < node_process_pids.size(); i++) {
-        spdlog::debug("Kill process {} with signal {}.", node_process_pids[i], signal_number);
-        kill(node_process_pids[i], SIGTERM);
+    for (size_t i{0}; i < nodes.size(); i++) {
+        spdlog::debug("Kill node process {} because of signal {}.", nodes[i].port, signal_number);
+        kill(nodes[i].pid, SIGTERM);
     }
     while ((wait(nullptr)) > 0);
     fmt::print("[{}] All subprocesses terminated successfully.\n", format(fg(fmt::color::magenta), "Controller"));
@@ -50,7 +50,7 @@ int main(int argc, char* argv[]) {
     CLI::Option* log_flag{app.add_flag("-l, --log", use_logging, "Write log file dist_sync_log.log.")};
     app.add_flag("-d, --debug", log_level_debug, "Set log level to debug.")->needs(log_flag);
     app.add_option("-f, --file", config_file, "Path to json config file.")->check(CLI::ExistingFile);
-    app.add_flag("--failure", simulate_error, "Simulate failure of one node");
+    app.add_flag("--failure", simulate_error, "Simulate failure of one connection");
 
     CLI11_PARSE(app, argc, argv);
 
@@ -84,16 +84,16 @@ int main(int argc, char* argv[]) {
                 }
             }
             if (json_config.contains("failure")) {
-                if (json_config["failure"].is_boolean()) {
+                if (json_config["failure"].is_number_unsigned()) {
                     simulate_error = json_config["failure"];
                 } else {
                     spdlog::error("Wrong parameter type for failure, using default value. Expected boolean.");
                 }
             }
-            config_ifstream.close();
         } catch (const nlohmann::detail::parse_error &json_err) {
             spdlog::error("{}. Continuing with default values.", json_err.what());
         }
+        config_ifstream.close();
     }
 
     // set logging settings
@@ -112,13 +112,9 @@ int main(int argc, char* argv[]) {
         spdlog::default_logger()->flush_on(spdlog::level::off);
     }
 
-    unsigned int vertice_cnt = node_cnt * 2 - 1;
-    if (vertice_cnt < node_cnt) {
-        vertice_cnt = node_cnt;
-    }
-    vector<vector<int>> network{generate_network_graph(vertice_cnt, node_cnt)};
+    unsigned int vertice_cnt = node_cnt + (int) ((node_cnt / 2) * 3);
 
-    vector<NodeData> nodes;
+    vector<vector<int>> network{generate_network_graph(vertice_cnt, node_cnt)};
 
     for(unsigned long int j{0}; j < node_cnt; j++) {
         NodeData new_node;
@@ -127,14 +123,25 @@ int main(int argc, char* argv[]) {
         nodes.push_back(new_node);
     }
 
-    size_t failure_node;
+    size_t failure_node_1;
+    size_t failure_node_2;
     if (simulate_error) {
         random_device rd{};
         mt19937 fail_node_gen{rd()};
         uniform_int_distribution<unsigned long int> fail_node_dis{0, node_cnt - 1ul};
-        failure_node = fail_node_dis(fail_node_gen);
-        nodes[failure_node].failure = true;
-        spdlog::info("Node {} is set to fail.", nodes[failure_node].port);
+        
+        failure_node_1 = fail_node_dis(fail_node_gen);
+        failure_node_2 = network[failure_node_1][0];
+
+        nodes[failure_node_1].failure = true;
+        nodes[failure_node_1].failed_connection = nodes[failure_node_2].port;
+
+        nodes[failure_node_2].failure = true;
+        nodes[failure_node_2].failed_connection = nodes[failure_node_1].port;
+
+        spdlog::info("Connection between node {} and node {}", nodes[failure_node_1].port, nodes[failure_node_2].port);
+        spdlog::info("Failing node 1: {} = {}", nodes[failure_node_1].failed_connection, nodes[failure_node_2].port);
+        spdlog::info("Failing ndoe 2: {} = {}", nodes[failure_node_2].failed_connection, nodes[failure_node_1].port);
     }
 
     // debug output of network graph
@@ -170,10 +177,10 @@ int main(int argc, char* argv[]) {
             //spdlog::debug("Next node port {}", network[i][j]);
             node_cmd_args.push_back(&nodes[(network[i][j])].port[0]);
         }
-        if (simulate_error) {
-            if (i == failure_node) {
-                node_cmd_args.push_back((char*)"-e");
-            }
+
+        if (nodes[i].failure) {
+            node_cmd_args.push_back((char*)"--failure");
+            node_cmd_args.push_back(&nodes[i].failed_connection[0]);
         }
 
         node_cmd_args.push_back(NULL);
@@ -192,19 +199,11 @@ int main(int argc, char* argv[]) {
             exit(EXIT_FAILURE);
         }
     }
-    for (size_t i{0}; i < node_cnt; i++) {
-        if (nodes[i].failure && simulate_error) {
-            thread fail_thread{kill_node, nodes[i].pid, chrono::seconds(30)};
-            fail_thread.detach();
-        }
-    }
+    signal(SIGINT, sigint_handler);
 
     pid_t node_pid;
     while ((node_pid = wait(nullptr)) > 0) {
         fmt::print("[{}] Node process {} terminated.\n", format(fg(fmt::color::magenta), "Controller"), node_pid);
     }
-
-    signal(SIGINT, sigint_handler);
-
     return 0;
 }

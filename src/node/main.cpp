@@ -18,13 +18,13 @@ using namespace std;
 int main(int argc, char* argv[]) {
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-    CLI::App app("Simulate the distributed algorithm for synchronization");
+    CLI::App app("Simulation of a node in a network.");
 
     int port{9900};
     vector<int> neighbours;
     bool use_logging{false};
     bool log_level_debug{false};
-    bool simulate_error{false};
+    int failure{-1};
     string config_file{"N/A"};
 
     app.add_option("-p, --port", port, "The port of this node.")->required();
@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
     CLI::Option* log_flag{app.add_flag("-l, --log", use_logging, "Write log file node_<port>.log.")};
     app.add_flag("-d, --debug", log_level_debug, "Set log level to debug.")->needs(log_flag);
     app.add_option("-f, --file", config_file, "Path to JSON config file.")->check(CLI::ExistingFile);
-    //app.add_flag("-e, --error", simulate_error, "Tells this node to simulate a failure");
+    app.add_option("--failure", failure, "Simulate failure of one random connection");
 
     CLI11_PARSE(app, argc, argv);
 
@@ -65,9 +65,17 @@ int main(int argc, char* argv[]) {
                     spdlog::error("Wrong parameter type for log, using default value. Expected boolean.");
                 }
             }
+            if (json_config.contains("failure")) {
+                if (json_config["failure"].is_number_unsigned()) {
+                    failure = json_config["failure"];
+                } else {
+                    spdlog::error("Wrong parameter type for failure, using default value. Expected boolean.");
+                }
+            }
         } catch (const nlohmann::detail::parse_error &json_err) {
             spdlog::error("{}. Continuing with default values.", json_err.what());
         }
+        config_ifstream.close();
     }
 
     // set logging settings
@@ -87,7 +95,7 @@ int main(int argc, char* argv[]) {
     }
     spdlog::info("Started node process {}.", port);
 
-    Node n1(port, neighbours, simulate_error);
+    Node n1(port, neighbours, failure);
     n1.run();
 
     return 0;

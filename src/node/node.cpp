@@ -22,6 +22,13 @@ using namespace std;
 void Node::run() {
     fmt::print("[{}] started.\n", format(fg(fmt::color::cyan), "Node " + to_string(this->message_sender.dv.port)));
     spdlog::info("Node {} started.", this->message_sender.dv.port);
+    if (this->message_sender.dv.failed_connection != -1) {
+        thread fail_timer{[this] (){
+            this_thread::sleep_for(chrono::seconds(30));
+            this->message_sender.dv.start_failure = true;
+        }};
+        fail_timer.detach();
+    }
 
     ostringstream neighbour_debug;
     for (size_t i{0}; i < neighbours.size(); i++) {
@@ -29,7 +36,7 @@ void Node::run() {
     }
     spdlog::debug("Neighbouring nodes are: {}", neighbour_debug.str());
 
-    string msg{"Testing new message from " + to_string(this->message_sender.dv.port)};
+    string msg{"A simple test message from node " + to_string(this->message_sender.dv.port)};
     thread sender_thd{ref(message_sender), msg};
     sender_thd.detach();
 
@@ -39,13 +46,6 @@ void Node::run() {
     acceptor.listen();
 
     while (true) {
-        if (failure) {
-            this->fail_cnt++;
-            if (this->fail_cnt > 10ul * direct_neighbours) {
-                spdlog::info("Node is simulating failure and shutting down.");
-                exit(103);
-            } 
-        }
         tcp::socket sock{ctxt};
         acceptor.accept(sock);
         thread handler{&Node::serve_request, this, move(sock)};
@@ -62,7 +62,7 @@ void Node::serve_request(tcp::socket&& sock) {;
     if (message.target() == this->message_sender.dv.port) {
         if (message.has_text_message()) {
             fmt::print("[{}] Received: " + message.text_message().text() + "\n", format(fg(fmt::color::cyan), "Node " + to_string(this->message_sender.dv.port)));
-            spdlog::info("Received message: {}", this->message_sender.dv.port, message.text_message().text());
+            spdlog::info("Received message: '{}'", message.text_message().text());
         } else if (message.has_update_message()) {
             this->message_sender.dv.parse_vector_update(message.source(), message.update_message());
         }

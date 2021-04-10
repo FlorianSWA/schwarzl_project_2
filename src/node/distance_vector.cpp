@@ -20,14 +20,14 @@ void DistanceVector::add_or_update_entry(int target_port_, int next_hop_, int di
         for (int i{0}; i < this->vector_size; i++) {
             if (vector_storage[i].target == target_port_) {
                 found = true;
-                if (distance_ < vector_storage[i].distance) {
+                if (distance_ < vector_storage[i].distance && this->vector_storage[i].distance != INT16_MAX) {
                     this->vector_storage[i].next_hop = next_hop_;
                     this->vector_storage[i].distance = distance_;
-                    spdlog::debug("Update distance vector entry to for {} to (target={}, next_hop={}, distance={})", target_port_, target_port_, next_hop_,  distance_);
-                } else if (distance_ == INT16_MAX) {
+                } if (distance_ == INT16_MAX && next_hop_ == this->vector_storage[i].next_hop) {
                     this->vector_storage[i].next_hop = next_hop_;
                     this->vector_storage[i].distance = distance_;
                 }
+                spdlog::debug("Update distance vector entry to for {} to (target={}, next_hop={}, distance={})", target_port_, target_port_, next_hop_,  distance_);
             }
         }
         
@@ -41,24 +41,21 @@ void DistanceVector::add_or_update_entry(int target_port_, int next_hop_, int di
             spdlog::debug("Add new distance vector entry (target={}, next_hop={}, distance={})", target_port_, next_hop_,  distance_);
         }
     }
-    stringstream debug_output_strm;
-    for (int i{0}; i < vector_size; i++) {
-        debug_output_strm << "\n (target=" << this->vector_storage[i].target << ", next_hop=" << this->vector_storage[i].next_hop << ", distance=" << this->vector_storage[i].distance << ")";
-    }
-    spdlog::debug(debug_output_strm.str());
 }
 
 void DistanceVector::parse_vector_update(int source_port_, proto_messages::VectorUpdate update_) {
     spdlog::info("Parsing vector update.", this->port);
+    lock_guard<mutex> lg(this->update_mutex);
     for (int i{0}; i < update_.vector_size(); i++) {
         proto_messages::VectorUpdate_VectorEntry v_entry{update_.vector(i)};
         add_or_update_entry(v_entry.target(), source_port_, v_entry.distance() + 1);
     }
+    print_debug();
 }
 
-void DistanceVector::init(vector<int> neighbours_) {
-    for (size_t i{0}; i < neighbours_.size(); i++) {
-        add_or_update_entry(neighbours_[i], neighbours_[i], 1);
+void DistanceVector::init() {
+    for (size_t i{0}; i < this->neighbours.size(); i++) {
+        add_or_update_entry(this->neighbours[i], this->neighbours[i], 1);
     };
     add_or_update_entry(this->port, this->port, 0);
 }
@@ -92,4 +89,12 @@ bool DistanceVector::is_reachable(int target_port_) {
         }
     }
     return true;
+}
+
+void DistanceVector::print_debug() {
+    stringstream debug_output_strm;
+    for (int i{0}; i < vector_size; i++) {
+        debug_output_strm << "\n (target=" << this->vector_storage[i].target << ", next_hop=" << this->vector_storage[i].next_hop << ", distance=" << this->vector_storage[i].distance << ")";
+    }
+    spdlog::debug(debug_output_strm.str());
 }

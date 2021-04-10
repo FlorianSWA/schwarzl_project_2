@@ -19,16 +19,33 @@ struct VectorEntry{
 
 class DistanceVector {
   private:
+    // Mutex for vector update
+    std::mutex update_mutex;
+
     // Update distance vector with new values
     void update_vector(int target_, int new_distance_);
 
+    // Prints current vector entry to debug output
+    void print_debug();
+
   public:
-    DistanceVector(int port_) {
+    DistanceVector(int port_, std::vector<int> neighbours_, int failed_conn_) {
       this->port = port_;
+      this->neighbours = neighbours_;
+      this->failed_connection = failed_conn_;
     };
+
+    // vector of all neighbouring nodes
+    std::vector<int> neighbours;
 
     // port of this node
     int port;
+
+    // port of thee neighbour whose connection failed
+    int failed_connection;
+
+    // flag to start simulating connection failure
+    bool start_failure{false};
 
     // stores vector entries
     std::vector<VectorEntry> vector_storage;
@@ -37,7 +54,7 @@ class DistanceVector {
     int vector_size = 0;
 
     // initializes vector with neighbour nodes
-    void init(std::vector<int> neighbours_);
+    void init();
 
     // Add entry to distance vector
     void add_or_update_entry(int target_port_, int next_hop_, int distance_);
