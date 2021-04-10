@@ -1,0 +1,19 @@
+\chapter{Routing}
+Das Routing umfasst das Suchen des schnellsten Weges zwischen zwei Knoten eines Netzwerkes. Es ist nicht zu verwechseln mit dem Weiterleiten (engl. Forwarding), welches sich genau genommen nur mit dem Weiterleiten von Nachrichten beschäftigt, unter der Annahme, dass bereits der kürzeste Weg bekannt ist. Diese beiden Aufgaben hängen jedoch insofern zusammen, als dass für das Weiterleiten einer Nachricht der kürzeste Weg bekannt sein muss. Daher, und weil Routing-Protokolle meist auch die Weiterleitung übernehmen, werden Routing und Weiterleiten oft als Synonyme verwendet. Die zentrale Aufgabe des Routings ist es, eine Routingtabelle (Weiterleitungstabelle) zu erstellen. Diese Tabelle enthält für jeden bekannten Knoten den kürzesten Weg, genauer gesagt den nächsten Knoten des kürzesten Weges zum Ziel. Diese Weiterleitungstabelle wird, wie der Name vermuten lässt, beim Weiterleiten von Nachrichten verwendet, um den nächsten Knoten (den nächsten Hop) zu bestimmen. Die Metrik, welche für die Bestimmung des kürzesten Weges verwendet wird, wird als Kosten bezeichnet. Jeder Kante im Netzwerkgraph werden bestimmte Kosten zugeordnet. Diese Kosten können sich aus mehreren Eigenschaften wie beispielsweise der Übertragungsleistung, der Zuverlässigkeit oder ähnlichem zusammensetzen. In diesem vereinfachten Beispiel werden als Kosten die Distanz zum nächsten Knoten genommen. Somit hat jede Kante im Netzwerkgraph einen Kostenwert von 1.
+
+\section{Routing-Algorithmen}
+Um die oben genannten Aufgaben zu erfüllen wurden im Laufe der Zeit eine Vielzahl von Algorithmen mit unterschiedlichen Eigenschaften entworfen. Es gibt verschiedene Ansätze die sich in Aufbau, Anpassungsfähigkeit und allgemeiner Funktionsweise unterscheiden. In den folgenden Sektionen wird die Aufteilung der Verfahren und ihre Unterschiede besprochen.
+
+\subsection{Statisches Verfahren}
+Dieses Verfahren ist das simpelste, jedoch in der Praxis kaum anwendbar. Die Weiterleitungstabelle eines jeden Knoten wird beim Aufsetzen des Netzwerks einmalig angelegt, danach kann diese nur noch manuell geändert werden. Aufgrund der statischen Eigenschaft dieses Verfahrens können temporäre Ausfälle von Knoten nur schwer berücksichtigt werden, daher wird es nur wenn überhaupt für provisorische Netzwerke mit simpler, sich kaum verändernder Topologie verwendet.
+
+\subsection{Zentrale Verfahren}
+Hier liegt die Routingtabelle bei einer zentralen Kontrolleinheit, welche sie an alle Knote weitergibt. Änderungen im Netzwerk müssen von der Zentrale erkannt werden und an alle Knoten weitergegeben werden. Um dies zu ermöglichen muss der Zentrale das gesamte Netzwerk bekannt sein und eine entsprechende Leistung und Ausfallsicherheit gegeben sein. Wie bei allen zentral geregelten Algorithmen ist ein Single-Point-of-Failure gegeben, welcher bei einem Ausfall das gesamte System lahmlegen kann.
+
+\subsection{Isoliertes Verfahren (Hot Potatoe)}
+
+\begin{itemize}
+    \item Teile der Welt mit, wer deine Nachbarn sind. Beispiel: Link-State-Protokolle
+    \item Teile deinen Nachbarn mit, wie du die Welt siehst. Beispiel: Distanzvektor-Algorithmen.
+\end{itemize}
+

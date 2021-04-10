@@ -1,0 +1,71 @@
+\documentclass{report}
+%encoding
+%--------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{cpp_style}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=4
+}
+
+\lstset{style=cpp_style}
+%--------------------------------------
+\usepackage[
+backend=biber,
+style=authortitle,
+sorting=ynt
+]{biblatex}
+\addbibresource{literatur.bib}
+
+%German-specific commands
+%--------------------------------------
+\usepackage[ngerman]{babel}
+%--------------------------------------
+
+%Hyphenation rules
+%--------------------------------------
+\usepackage{hyphenat}
+\hyphenation{Mathe-matik wieder-gewinnen}
+\usepackage{lipsum}
+%--------------------------------------
+\begin{document}
+\pagenumbering{gobble}
+\clearpage
+\thispagestyle{empty}
+\author{Florian Schwarzl, 5BHIF, 21}
+\date{8. April 2021}
+\title{NVS Projekt: Distance-Vector Algorithmus}
+%\subtitle{Beispielnummer 39}
+\maketitle
+\clearpage
+\pagenumbering{arabic}
+\tableofcontents
+\newpage
+
+\include{introduction}
+\include{algorithm}
+
+\printbibliography
+\end{document}
