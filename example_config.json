@@ -1,0 +1,6 @@
+{
+    "nodes" : 8,
+    "log"  : false,
+    "debug" : false,
+    "failure" : false
+}
