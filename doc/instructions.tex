@@ -1,1 +1,50 @@
 \chapter{Bedienung}
+Das Programm ist über die Kommandozeile zu starten, indem man das Hauptprogramm \verb|distance_vector_sim| aufruft. Die gesamte Simulation besteht aus zwei ausführbaren Dateien, dem Hauptprogramm und den Knoten. Jeder Knoten ist ein eigener Prozess, in dem die Datei node ausgeführt wird. Das Hauptprogramm dient nur zum erstellen des Netzwerkgraphen und starten der Knoten. Sobald alle Knoten gestartet sind, erfolgt keine Kommunikation von oder zu dem Hauptprogramm. Die folgende Tabelle \ref{main_params} zeigt alle Parameter, welche am Hauptprogramm eingestellt werden können. Die Konfiguration des Programms kann sowohl über die Kommandozeilenparameter als auch über eine JSON-Datei erfolgen.
+
+\begin{table}
+\caption{Parameter des Hauptprogramms}
+\label{main_params}
+\centering
+\begin{tabular}{ | m{3cm} | m{3cm} | m{2.5cm} | m{3cm} | }
+\hline
+\textbf{Parameter} & \textbf{Datentyp} & \textbf{Standardwert} & \textbf{Beschreibung} \\
+\hline
+node count & ganze Zahl größer 0 & 7 & Anzahl der zu erstellenden Knoten \\
+\hline
+\texttt{-l, --log} & boolean & false & Aktiviert logging \\
+\hline
+\texttt{-d, --debug} & boolean & false & Setzt Log-Level auf Debug (benötigt \texttt{--log} \\
+\hline
+\texttt{-f, --file} & Dateipfad & & Pfad zur JSON-Konfigurationsdatei \\
+\hline
+\texttt{--failure} & boolean & false & Simuliert den Ausfall einer Verbindung \\
+\hline
+\end{tabular}
+\end{table}
+
+Keiner der angegebenen Parameter ist verpflichtend, jeder kann weggelassen werden, wodurch die Standardwerte herangezogen werden. Die Parameter der Konfigurationsdatei sind die selben wie jene, die über die Kommandozeile angegeben werden können. Die eiinzige Ausnahme ist der Parameter für die Konfigurationsdatei selbst, welcher nicht in der Datei angegeben werden kann. Die Tabelle \ref{main_params_file} zeigt alle Parameter, welche in der Konfigurationsdatei angegeben werden können. Für die Parameter der Konfigurationsdatei gelten die gleichen Anforderungen wie für jene der Kommandozeile. So braucht auch hier die Option debug zuvor die Option log.
+
+\begin{table}
+\caption{Parameter der Konfigurationsdatei}
+\label{main_params_file}
+\centering
+\begin{tabular}{ | m{3cm} | m{3cm} | m{3cm}| }
+\hline
+\textbf{Parameter} & \textbf{Datentyp} & \textbf{Standardwert} \\
+\hline
+nodes & ganze Zahl größer 0 & 7 \\
+\hline
+log & boolean & false \\
+\hline
+debug & boolean & false \\
+\hline
+failure & boolean & false \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Knoten}
+Jeder Knoten ist ein eigenes Programm, welches automatisch vom Hauptprogramm gestartet wird. Es nicht empfohlen, die Knoten manuell zu starten, da so auch ein sinnvoller Netzwerkgraph händicsh erstellt werden muss und an die Knoten übergeben werden muss. Jeder Knoten bekommt als Parameter seine eigene Portnummer und die Portnummern seiner direkten Nachbarn im Simulierten Netzwerk. Weiter werden die Optionen für Logging analog zum Hauptprozess gesetzt. Die Option für den simulierten Ausfall wird mit --failure und einer danach folgenden Portnummer an zwei benachbarte Knoten übergeben. Die beiden Knoten erhalten über diese Option die Portnummer zu dem Knoten, dessen Verbindung ausfallen wird. Die beiden Knoten müssen benachbart sein, damit eine direkte Verbindung zwischen ihnen besteht. Auch den Knoten können die Parameter über eine Konfigurationsdatei übergeben werden.
+
+\section{Logging}
+Wenn die Option des Logging aktiviert wird, erstellt jeder Prozess eine eigene Datei. In diese Datei wird je nach gesetzten Log-Level Information über den Ablauf des Programms gespeichert. Vermerkt werden sollte, dass in der Datei des Hauptprogramms, welche controller.log heißt, der erstellte Netzwerkgraph gespeichert wird. Somit kann die Korrektheit der Routing-Informationen überprüft werden. Abgesehen von dieser Information werden je nach Parameter primär Informationen über den Programmablauf gespeichert, beispielsweise werden auf Debug-Level jeder Verbindungsauf- und -abbau vermerkt.
