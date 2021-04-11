@@ -26,7 +26,7 @@ void DistanceVector::add_or_update_entry(int target_port_, int next_hop_, int di
                     fmt::print("[{}] ({}) received. Distance updated to {} for {}.\n", format(fg(fmt::color::cyan)
                         , "Node " + to_string(this->port)), format(fg(fmt::color::dark_khaki), "VectorUpdate"), distance_, target_port_);
                     spdlog::debug("Update distance vector entry to for {} to (target={}, next_hop={}, distance={})", target_port_, target_port_, next_hop_,  distance_);
-                } else if (distance_ == INT16_MAX && this->vector_storage[i].distance !=INT16_MAX) {
+                } else if (distance_ == INT16_MAX && this->vector_storage[i].distance !=INT16_MAX && this->vector_storage[i].next_hop == next_hop_) {
                     this->vector_storage[i].next_hop = next_hop_;
                     this->vector_storage[i].distance = distance_;
                     fmt::print("[{}] ({}) received. Distance updated to {} for {}.\n", format(fg(fmt::color::cyan)
