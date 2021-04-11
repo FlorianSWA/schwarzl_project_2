@@ -1,5 +1,4 @@
-# schwarzl_project_2
-NVS Projekt 2: Distance Vector Algorithmus
+# NVS Projekt 2: Distance Vector Algorithmus
 Dieses Programm ist eine lokale Simulation des Distance-Vector-Algorithmus. Es verwendet eine zufällig generierte Netzwerktopographie, wobei jeder Knoten durch einen Prozess, der auf einen bestimmten Port hört, dargestellt wird. Jeder Knoten kennt zu Begin nur seine direkten Nachbarn und erfährt den Weg zu weiteren Knoten über periodisch versendete Routing-Updates.
 
 # Verwendung
@@ -24,6 +23,8 @@ Die JSON-Datei zur Konfiguration hat folgende Felder:
 | debug    | boolean         | Setzt Log-Level auf Debug. Benötigt --log |
 | failure  | boolean         | Aktiviert die Simulation eines verbindungsausfalls |
 
+# Algorithmus#
+Der Distance-Vector-Algorithmus arbeitet nach dem Prinzip: Teile deinen Nachbarn mit, wie du die Welt siehts. Jeder Knoten hat eine Weiterleitungstabelle, in der für jeden ihm bekannten Knoten ein Eintrag ist. Dieser Eintrag beinhaltet den Zielknoten, den nächsten Knoten, über den dieser zu erreichen ist und die Distanz zum Ziel. Zu Beginn kennt jeder Knoten nur seine direkten Nachbarn. Regelmäßig sendet jeder Knoten an seine direkten Nachbarn Aktualisierungen aus, die seine Weiterleitungstabelle enthalten. Erhält ein Knoten nun so eine Aktualisierung, vergleicht er die erhaltenen Einträge mit jenen in seiner Weiterleitungstabelle. Ist der Knoten noch nicht enthalten, wird er mit einer um 1 erhöhten Distanz übernommen. Gibt es bereits einen Eintrag zu diesem Knoten werden die Distanzen verglichen, ist die um 1 erhöhte erhaltene Distanz kleiner als die bereits gespeicherte, wird der neue Eintrag übernommen und der Sender der Aktualisierung als nächster Knoten zum Erreichen des Ziels eingetragen.
 
 ## Verwendete Software
 * [asio](https://think-async.com/Asio/)
