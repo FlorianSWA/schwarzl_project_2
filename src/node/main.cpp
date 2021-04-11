@@ -27,12 +27,12 @@ int main(int argc, char* argv[]) {
     int failure{0};
     string config_file{"N/A"};
 
-    app.add_option("-p, --port", port, "The port of this node.")->required();
+    app.add_option("-p, --port", port, "The port of this node.")->required()->check(CLI::PositiveNumber);
     app.add_option("-n, --neighbours", neighbours, "Vector of neighbouring node ports.");
     CLI::Option* log_flag{app.add_flag("-l, --log", use_logging, "Write log file node_<port>.log.")};
     app.add_flag("-d, --debug", log_level_debug, "Set log level to debug.")->needs(log_flag);
     app.add_option("-f, --file", config_file, "Path to JSON config file.")->check(CLI::ExistingFile);
-    app.add_option("--failure", failure, "Simulate failure of one random connection");
+    app.add_option("--failure", failure, "Target port of connection that will fail.");
 
     CLI11_PARSE(app, argc, argv);
 
@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
                 }
             }
             if (json_config.contains("failure")) {
-                if (json_config["failure"].is_number_unsigned()) {
+                if (json_config["failure"].is_boolean()) {
                     failure = json_config["failure"];
                 } else {
                     spdlog::error("Wrong parameter type for failure, using default value. Expected boolean.");

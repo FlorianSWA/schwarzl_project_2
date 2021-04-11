@@ -84,7 +84,7 @@ int main(int argc, char* argv[]) {
                 }
             }
             if (json_config.contains("failure")) {
-                if (json_config["failure"].is_number_unsigned()) {
+                if (json_config["failure"].is_boolean()) {
                     simulate_error = json_config["failure"];
                 } else {
                     spdlog::error("Wrong parameter type for failure, using default value. Expected boolean.");
@@ -172,10 +172,12 @@ int main(int argc, char* argv[]) {
         node_cmd_args.push_back((char*)"-p");
         node_cmd_args.push_back(&nodes[i].port[0]);
 
-        node_cmd_args.push_back((char*)"-n");
-        for (size_t j{0}; j < network[i].size(); j++) {
-            //spdlog::debug("Next node port {}", network[i][j]);
-            node_cmd_args.push_back(&nodes[(network[i][j])].port[0]);
+        if (network[i].size() > 0) {
+            node_cmd_args.push_back((char*)"-n");
+            for (size_t j{0}; j < network[i].size(); j++) {
+                //spdlog::debug("Next node port {}", network[i][j]);
+                node_cmd_args.push_back(&nodes[(network[i][j])].port[0]);
+            }
         }
 
         if (nodes[i].failure) {

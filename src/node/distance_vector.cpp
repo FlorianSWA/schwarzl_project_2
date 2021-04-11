@@ -20,13 +20,17 @@ void DistanceVector::add_or_update_entry(int target_port_, int next_hop_, int di
         for (int i{0}; i < this->vector_size; i++) {
             if (vector_storage[i].target == target_port_) {
                 found = true;
-                if (distance_ < vector_storage[i].distance) {
+                if (distance_ + 1 < vector_storage[i].distance) {
                     this->vector_storage[i].next_hop = next_hop_;
-                    this->vector_storage[i].distance = distance_;
+                    this->vector_storage[i].distance = distance_ + 1;
+                    fmt::print("[{}] ({}) received. Distance updated to {} for {}.\n", format(fg(fmt::color::cyan)
+                        , "Node " + to_string(this->port)), format(fg(fmt::color::dark_khaki), "VectorUpdate"), distance_, target_port_);
                     spdlog::debug("Update distance vector entry to for {} to (target={}, next_hop={}, distance={})", target_port_, target_port_, next_hop_,  distance_);
-                } else if (distance_ == INT16_MAX && next_hop_ == this->vector_storage[i].next_hop) {
+                } else if (distance_ == INT16_MAX && this->vector_storage[i].distance !=INT16_MAX) {
                     this->vector_storage[i].next_hop = next_hop_;
                     this->vector_storage[i].distance = distance_;
+                    fmt::print("[{}] ({}) received. Distance updated to {} for {}.\n", format(fg(fmt::color::cyan)
+                    , "Node " + to_string(this->port)), format(fg(fmt::color::dark_khaki), "VectorUpdate"), distance_, target_port_);
                     spdlog::debug("Update distance vector entry to for {} to (target={}, next_hop={}, distance={})", target_port_, target_port_, next_hop_,  distance_);
                 }
             }
@@ -40,6 +44,8 @@ void DistanceVector::add_or_update_entry(int target_port_, int next_hop_, int di
             this->vector_storage.push_back(entry);
             this->vector_size += 1;
             spdlog::debug("Add new distance vector entry (target={}, next_hop={}, distance={})", target_port_, next_hop_,  distance_);
+            fmt::print("[{}] ({}) received. New entry added for {}.\n", format(fg(fmt::color::cyan)
+                , "Node " + to_string(this->port)), format(fg(fmt::color::dark_khaki), "VectorUpdate"), target_port_);
         }
     }
 }
@@ -49,7 +55,7 @@ void DistanceVector::parse_vector_update(int source_port_, proto_messages::Vecto
     lock_guard<mutex> lg(this->update_mutex);
     for (int i{0}; i < update_.vector_size(); i++) {
         proto_messages::VectorUpdate_VectorEntry v_entry{update_.vector(i)};
-        add_or_update_entry(v_entry.target(), source_port_, v_entry.distance() + 1);
+        add_or_update_entry(v_entry.target(), source_port_, v_entry.distance());
     }
     print_debug();
 }
@@ -85,7 +91,9 @@ bool DistanceVector::is_reachable(int target_port_) {
     for (int i{0}; i < this->vector_size; i++) {
         if (this->vector_storage[i].target == target_port_ && vector_storage[i].distance == INT16_MAX) {
             spdlog::info("Target {} is set as not reachable, sending will be aborted.", target_port_);
-            fmt::print("[{}] Target {} is set as not reachable.\n", format(fg(fmt::color::dark_red), "Node " + to_string(this->port)), target_port_);
+            fmt::print("[{}] ({}) Target {} is set as not reachable.\n"
+                , format(fg(fmt::color::cyan), "Node " + to_string(this->port))
+                , format(fg(fmt::color::dark_red),  "Simulation"), target_port_);
             return false;
         }
     }

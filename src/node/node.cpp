@@ -27,7 +27,9 @@ void Node::run() {
         thread fail_timer{[this] (){
             this_thread::sleep_for(chrono::seconds(30));
             this->message_sender.dv.start_fail();
-            fmt::print("[{}] is simulating connection failure.\n", format(fg(fmt::color::dark_red), "Node " + to_string(this->message_sender.dv.port)));
+            fmt::print("[{}] ({}) Simulating connection failure to {}.\n"
+                , format(fg(fmt::color::cyan), "Node " + to_string(this->message_sender.dv.port)), format(fg(fmt::color::dark_red), "Simulation")
+                , this->message_sender.dv.failed_connection);
         }};
         fail_timer.detach();
     }
@@ -63,7 +65,8 @@ void Node::serve_request(tcp::socket&& sock) {;
     message.ParseFromIstream(&is);
     if (message.target() == this->message_sender.dv.port) {
         if (message.has_text_message()) {
-            fmt::print("[{}] Received: " + message.text_message().text() + "\n", format(fg(fmt::color::cyan), "Node " + to_string(this->message_sender.dv.port)));
+            fmt::print("[{}] ({}) Received: " + message.text_message().text() + "\n", format(fg(fmt::color::cyan)
+                , "Node " + to_string(this->message_sender.dv.port)), format(fg(fmt::color::pale_green), "TextMessage"));
             spdlog::info("Received message: '{}'", message.text_message().text());
         } else if (message.has_update_message()) {
             this->message_sender.dv.parse_vector_update(message.source(), message.update_message());

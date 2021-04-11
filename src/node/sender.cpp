@@ -32,7 +32,7 @@ void Sender::send_text(string message, int target_port_, int sender_port) {
             sm->set_text(message);
             strm << wrapper.SerializeAsString();
             strm << "\n";
-            fmt::print("[{}] sent message to {}\n", format(fg(fmt::color::cyan), "Node " + to_string(sender_port)), next_hop);
+            //fmt::print("[{}] sent message to {}\n", format(fg(fmt::color::cyan), "Node " + to_string(sender_port)), next_hop);
             spdlog::info("Sent message to {}", next_hop);
             strm.close();
             spdlog::debug("Closed connection between Node {} (sender) and Node {} (reciever).", sender_port, next_hop);
@@ -51,7 +51,7 @@ void Sender::operator()(string message) {
 
     random_device rd{};
     mt19937 gen{rd()};
-    uniform_int_distribution<int> sleep_dis{6, 8};
+    uniform_int_distribution<int> sleep_dis{8, 12};
 
     int current_target{0};
     while (true) {
@@ -82,7 +82,8 @@ void Sender::redirect(proto_messages::WrapperMessage message_) {
                 message_.set_prev_hop(this->dv.port);
                 strm << message_.SerializeAsString();
                 strm << "\n";
-                fmt::print("[{}] Redirect message to {}\n", format(fg(fmt::color::cyan), "Node " + to_string(this->dv.port)), next_hop);
+                fmt::print("[{}] ({}) Redirect message to {}\n",
+                     format(fg(fmt::color::cyan), "Node " + to_string(this->dv.port)), format(fg(fmt::color::white_smoke), "Redirect"),  next_hop);
                 spdlog::info("Redirect message to {}", next_hop);
                 strm.close();
                 spdlog::debug("Closed connection between Node {} (sender) and Node {} (reciever).", this->dv.port, next_hop);

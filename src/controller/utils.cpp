@@ -8,6 +8,8 @@ Date: 2021-03-05
 #include <chrono>
 #include "utils.h"
 #include "spdlog/spdlog.h"
+#include "spdlog/fmt/fmt.h"
+#include "spdlog/fmt/bundled/color.h"
 
 using namespace std;
 
@@ -50,6 +52,7 @@ vector<vector<int>> generate_network_graph(int edge_cnt, int node_cnt) {
                 returnVec[i].push_back(edge[j][0]);
                 count++;
             } else if (j == edge_cnt - 1 && count == 0) {
+                fmt::print("[{}] Isolated Node created!\n", format(fg(fmt::color::magenta), "Controller"));
                 spdlog::error("Network graph creation: Isolated vertex created!");
             }
         }
